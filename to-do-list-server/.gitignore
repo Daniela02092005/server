@@ -1,0 +1,3 @@
+//Se ignoraran en la subida al git
+node_modules
+.env
