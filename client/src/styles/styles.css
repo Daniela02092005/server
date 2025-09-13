@@ -1,0 +1,277 @@
+.main { /* Distribución normal de los prototipos, es decir, logo a la izq. y form a la derecha*/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px; 
+}
+
+.main.reverse { /* Distribución inversa de los prototipos, es decir, form a la izq. y logo a la derecha*/
+  flex-direction: row-reverse;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    padding: 50px;
+}
+
+.container img {
+    width: 440px;
+    height: 440px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    display: block;
+    margin: 0 auto 1rem auto;
+}
+
+.container h2 {
+    text-align: center;
+    color: #8300BF;
+    font-size: 42px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    padding: 80px;
+    gap: 10px;
+    width: 400px;
+    max-width: 100%; 
+}
+
+.form input{
+    padding: 12px;
+    width: 100%;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    border-bottom: 2px solid black;
+    box-sizing: border-box;
+}
+
+.terms {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    white-space: nowrap;
+}
+
+.form button {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #8300BF;
+    padding: 10px 30px;
+    border: none;
+    width: 80%;
+    align-self: center;
+    
+}
+
+/* ================== edit_profile ================== */
+.profile-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  padding: 40px;
+}
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-container img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%; /* círculo */
+  object-fit: contain;
+  background: #f2f2f2;
+  padding: 20px;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+}
+
+.profile-container h2 {
+  margin-top: 20px;
+  color: #777;
+  font-size: 22px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 250px;
+}
+
+.profile-form input {
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 8px;
+  font-size: 14px;
+  outline: none;
+  background: transparent;
+}
+
+.profile-form input:focus {
+  border-bottom: 2px solid #8300BF; /* morado CodeNova */
+}
+
+.btn-save, .btn-cancel {
+  padding: 10px;
+  border: none;
+  color: white;
+  background: #777;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+.btn-save:hover {
+  background: #4caf50; /* verde al pasar */
+}
+
+.btn-cancel:hover {
+  background: #e53935; /* rojo al pasar */
+}
+
+/* ================== EDIT TASK ================== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #777;          /* gris menú */
+  color: white;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.user-icon {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.edit-task-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 60px;
+  padding: 40px;
+}
+
+/* Formulario */
+.edit-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 300px;
+}
+
+.edit-task-form input {
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 8px;
+  font-size: 14px;
+  outline: none;
+  background: transparent;
+}
+
+.edit-task-form input:focus {
+  border-bottom: 2px solid #6a1b9a; /* morado CodeNova */
+}
+
+/* Botones */
+.btn-save, .btn-cancel {
+  padding: 10px;
+  border: none;
+  color: white;
+  background: #777;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+.btn-save:hover {
+  background: #4caf50; /* verde al pasar */
+}
+
+.btn-cancel:hover {
+  background: #e53935; /* rojo al pasar */
+}
+
+/* Imagen */
+.container img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%; 
+  object-fit: contain;
+  background: #f2f2f2;
+  padding: 20px;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .edit-task-main {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .edit-task-form {
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .container img {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+
+
+
+
+@media (max-width: 600px) {
+    body {
+        flex-direction: column;
+        padding: 20px;
+        height: auto;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .container img {
+        width: 180px;
+        height: 180px;
+    }
+
+    .container h2 {
+        font-size: 28px;
+    }
+
+    .form {
+        padding: 20px 16px;
+        margin: auto;
+        width: 100%;
+    }
+
+    .form input {
+        margin: auto;
+        width: 100%;
+    }
+}
