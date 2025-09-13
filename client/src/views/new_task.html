@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crear Tarea</title>
+  <link rel="stylesheet" href="../styles/index.css">
+  <link rel="stylesheet" href="../styles/styles.css">
+</head>
+<body>
+  <header class="header">
+    <h2>Crear Tarea</h2>
+    <span class="user-icon">👤</span>
+  </header>
+
+  <main class="main">
+    <section class="form">
+      <form id="createTaskForm">
+        <input type="text" name="title" placeholder="Título de Tarea" required />
+        <input type="text" name="detail" placeholder="Detalle de Tarea" />
+        <input type="text" name="status" placeholder="Estado (pending / done)" required />
+        <input type="date" name="date" required />
+        <label for="hora">Hora de la Tarea</label>
+        <input type="time" id="hora" name="time" required />
+        <button type="submit" class="btn-save">Crear Tarea</button>
+        <button type="button" class="btn-cancel" onclick="window.location.href='list_tasks.html'">Cancelar</button>
+      </form>
+    </section>
+
+    <section class="container">
+      <img src="https://cdn-icons-png.flaticon.com/512/747/747993.png" alt="Subir Imagen" />
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    document.getElementById("createTaskForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const token = getToken();
+      if (!token) {
+        alert("Por favor inicia sesión");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const form = e.target;
+      const title = form.title.value;
+      const detail = form.detail.value;
+      const status = form.status.value;
+      const date = form.date.value;
+      const time = form.time.value;
+
+      const datetime = new Date(`${date}T${time}`).toISOString();
+
+      try {
+        const task = await fetchWithAuth(`${API}/tasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, detail, status, datetime }),
+        });
+
+        alert("Tarea creada con éxito");
+        window.location.href = "list_tasks.html";
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+  </script>
+</body>
+</html>
