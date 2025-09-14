@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //Creacion de constante para cors
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: process.env.FRONTEND_URL || "https://code-nova-project.vercel.app/",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
