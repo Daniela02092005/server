@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const GlobalDAO = require("./GlobalDAO");
-const User = require("../../database/models/User");
+const User = require("../models/User");
 
 class UserDAO extends GlobalDAO {
   constructor() {

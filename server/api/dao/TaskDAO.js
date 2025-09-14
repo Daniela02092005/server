@@ -1,6 +1,6 @@
 //creemos la clase que hereda a GlobalDAO y importa el modelo de task
 const GlobalDAO = require("./GlobalDAO");
-const Task = require("../../database/models/Task");
+const Task = require("../models/Task");
 
 class TaskDAO extends GlobalDAO {
   constructor() {
