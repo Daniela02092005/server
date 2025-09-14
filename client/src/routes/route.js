@@ -1,4 +1,3 @@
-// src/routes/route.js
 const app = document.getElementById('app');
 
 /**
@@ -43,7 +42,7 @@ function handleRoute() {
     'sign-up',
     'list_tasks',
     'new_task',
-    'edit_task',
+    'edit_task',   // 🔹 corregido (antes "edit_tasks")
     'edit_profile',
     'recover_password'
   ];
@@ -66,8 +65,16 @@ function initLogin() {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = e.target.userEmail.value;
-    const password = e.target.userPassword.value;
+
+    const email = form.userEmail.value;
+    const password = form.userPassword.value;
+
+    if (!email || !password) {
+      alert('Por favor completa usuario y contraseña.');
+      return;
+    }
+
+    form.querySelector('button[type="submit"]').disabled = true;
 
     try {
       const data = await fetch(`${API}/auth/login`, {
@@ -85,6 +92,8 @@ function initLogin() {
       }
     } catch (error) {
       alert(error.message);
+    } finally {
+      form.querySelector('button[type="submit"]').disabled = false;
     }
   });
 }
@@ -99,10 +108,12 @@ function initSignUp() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const username = e.target.userName.value;
-    const email = e.target.userEmail.value;
-    const password = e.target.userPassword.value;
-    const confirmPassword = e.target.confirPassword.value;
+    const username = form.userName.value;
+    const lastName = form.userLastName.value;
+    const age = form.userAge.value;
+    const email = form.userEmail.value;
+    const password = form.userPassword.value;
+    const confirmPassword = form.confirPassword.value;
 
     if (password !== confirmPassword) {
       alert("Las contraseñas no coinciden");
@@ -113,7 +124,7 @@ function initSignUp() {
       const data = await fetch(`${API}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, lastName, age, email, password }),
       }).then(res => res.json());
 
       if (data.id) {
@@ -137,7 +148,7 @@ function initRecoverPassword() {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = e.target.userEmail.value;
+    const email = form.userEmail.value;
 
     try {
       const data = await fetch(`${API}/auth/recover`, {
