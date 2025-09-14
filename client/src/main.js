@@ -5,7 +5,8 @@
  * - Imports and initializes the router to handle hash-based navigation.
  */
 
-import './styles/base.css';
+import './styles/index.css';
+import './styles/styles.css';
 import { initRouter } from './routes/route.js';
 
 /**
