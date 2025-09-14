@@ -1,75 +1,34 @@
-import { registerUser, loginUser, recoverPassword } from '../services/userService.js';
+import { registerUser , loginUser , recoverPassword } from '../services/userService.js';
 import { createTask, getTasks, getTaskById, updateTask, deleteTask } from '../services/taskService.js';
 
 const app = document.getElementById('app');
 
-
-/**
- * Build a safe URL for fetching view fragments inside Vite (dev and build).
- * @param {string} name - The name of the view (without extension).
- * @returns {URL} The resolved URL for the view HTML file.
- */
 const viewURL = (name) => new URL(`../views/${name}.html`, import.meta.url);
 
-/**
- * Load an HTML fragment by view name and initialize its corresponding logic.
- * @async
- * @param {string} name - The view name to load (e.g., "home", "board").
- * @param {string} [params=''] - Optional parameters for view initialization.
- * @throws {Error} If the view cannot be fetched.
- */
 async function loadView(name, params = '') {
   const res = await fetch(viewURL(name));
   if (!res.ok) throw new Error(`Failed to load view: ${name}`);
   const html = await res.text();
   app.innerHTML = html;
 
-  // Initialize view-specific logic
   switch (name) {
-    case 'home':
-      initHome();
-      break;
-    case 'board':
-      initBoard();
-      break;
-    case 'login':
-      initLogin();
-      break;
-    case 'sign-up':
-      initSignUp();
-      break;
-    case 'recover_password':
-      initRecoverPassword();
-      break;
-    case 'list_tasks':
-      initListTasks();
-      break;
-    case 'new_task':
-      initNewTask();
-      break;
-    case 'edit_tasks':
-      initEditTask(params); // Pass params for task ID
-      break;
-    case 'edit_profile':
-      initEditProfile();
-      break;
-    // Add other cases for new views
+    case 'home': initHome(); break;
+    case 'board': initBoard(); break;
+    case 'login': initLogin(); break;
+    case 'sign-up': initSignUp(); break;
+    case 'recover_password': initRecoverPassword(); break;
+    case 'list_tasks': initListTasks(); break;
+    case 'new_task': initNewTask(); break;
+    case 'edit_tasks': initEditTask(params); break;
+    case 'edit_profile': initEditProfile(); break;
   }
 }
 
-/**
- * Initialize the hash-based router.
- * Attaches an event listener for URL changes and triggers the first render.
- */
 export function initRouter() {
   window.addEventListener('hashchange', handleRoute);
-  handleRoute(); // first render
+  handleRoute();
 }
 
-/**
- * Handle the current route based on the location hash.
- * Fallback to 'home' if the route is unknown.
- */
 function handleRoute() {
   const hash = location.hash.startsWith('#/') ? location.hash.slice(2) : '';
   const [path, queryString] = hash.split('?');
@@ -85,44 +44,27 @@ function handleRoute() {
   });
 }
 
-/* ---- View-specific logic (existing and new) ---- */
-
-/**
- * Initialize the "home" view.
- * Attaches a submit handler to the register form to navigate to the board.
- */
 function initHome() {
   const form = document.getElementById('registerForm');
   const userInput = document.getElementById('username');
   const passInput = document.getElementById('password');
   const msg = document.getElementById('registerMsg');
-
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     msg.textContent = '';
-
     const username = userInput?.value.trim();
     const password = passInput?.value.trim();
-
     if (!username || !password) {
       msg.textContent = 'Por favor completa usuario y contraseña.';
       return;
     }
-
     form.querySelector('button[type="submit"]').disabled = true;
-
     try {
-      // NOTE: The backend register expects 'email' and 'password'.
-      // For initHome to work with the current backend, 'username' should ideally be 'email'.
-      // If 'username' is intended as a display name, the backend register function needs adjustment
-      // or this form should collect an email.
-      // For now, we'll use 'username' as 'email' for the registerUser call to match backend.
-      const data = await registerUser({ username: username, email: username, password: password });
+      const data = await registerUser ({ username, email: username, password });
       msg.textContent = 'Registro exitoso. Por favor, inicia sesión.';
-
-      setTimeout(() => (location.hash = '#/login'), 400); // Redirect to login after registration
+      setTimeout(() => (location.hash = '#/login'), 400);
     } catch (err) {
       msg.textContent = `No se pudo registrar: ${err.message}`;
     } finally {
@@ -131,22 +73,16 @@ function initHome() {
   });
 }
 
-/**
- * Initialize the "board" view.
- * Sets up the todo form, input, and list with create/remove/toggle logic.
- */
 function initBoard() {
   const form = document.getElementById('todoForm');
   const input = document.getElementById('newTodo');
   const list = document.getElementById('todoList');
   if (!form || !input || !list) return;
 
-  // Add new todo item
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const title = input.value.trim();
     if (!title) return;
-
     const li = document.createElement('li');
     li.className = 'todo';
     li.innerHTML = `
@@ -160,7 +96,6 @@ function initBoard() {
     input.value = '';
   });
 
-  // Handle remove and toggle completion
   list.addEventListener('click', (e) => {
     const li = e.target.closest('.todo');
     if (!li) return;
@@ -169,9 +104,6 @@ function initBoard() {
   });
 }
 
-/**
- * Initialize the "login" view.
- */
 function initLogin() {
   const form = document.getElementById("loginForm");
   if (!form) return;
@@ -180,13 +112,12 @@ function initLogin() {
     e.preventDefault();
     const email = e.target.userEmail.value;
     const password = e.target.userPassword.value;
-
     try {
-      const data = await loginUser({ email, password }); // Call the userService login function
+      const data = await loginUser ({ email, password });
       if (data.token) {
-        localStorage.setItem('token', data.token); // Store token
+        localStorage.setItem('token', data.token);
         alert("Login exitoso");
-        location.hash = "#/list_tasks"; // Navigate to list_tasks
+        location.hash = "#/list_tasks";
       } else {
         alert(data.message || "Error en login");
       }
@@ -196,22 +127,17 @@ function initLogin() {
   });
 }
 
-/**
- * Initialize the "sign-up" view.
- */
 function initSignUp() {
   const form = document.getElementById("registerForm");
   if (!form) return;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const username = e.target.userName.value;
     const email = e.target.userEmail.value;
     const password = e.target.userPassword.value;
     const confirmPassword = e.target.confirPassword.value;
     const termsAccepted = e.target.termsAndConditions.checked;
-
     if (password !== confirmPassword) {
       alert("Las contraseñas no coinciden");
       return;
@@ -220,12 +146,11 @@ function initSignUp() {
       alert("Debes aceptar los términos y condiciones.");
       return;
     }
-
     try {
-      const data = await registerUser({ username, email, password }); // Call the userService register function
+      const data = await registerUser ({ username, email, password });
       if (data.id) {
         alert("Registro exitoso, por favor inicia sesión");
-        location.hash = "#/login"; // Navigate to login
+        location.hash = "#/login";
       } else {
         alert(data.message || "Error en registro");
       }
@@ -235,9 +160,6 @@ function initSignUp() {
   });
 }
 
-/**
- * Initialize the "recover_password" view.
- */
 function initRecoverPassword() {
   const form = document.getElementById("recoverForm");
   if (!form) return;
@@ -245,35 +167,28 @@ function initRecoverPassword() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = e.target.userEmail.value;
-
     try {
-      const data = await recoverPassword({ email }); // Call the userService recover function
+      const data = await recoverPassword({ email });
       alert(data.message || "Si el correo existe, se ha enviado un enlace de recuperación");
-      location.hash = "#/login"; // Redirect to login after sending recovery link
+      location.hash = "#/login";
     } catch (error) {
       alert(error.message);
     }
   });
 }
 
-/**
- * Initialize the "list_tasks" view.
- */
 async function initListTasks() {
   const tbody = document.querySelector(".task-table tbody");
   if (!tbody) return;
-
   const token = localStorage.getItem('token');
   if (!token) {
     alert("Por favor inicia sesión");
     location.hash = "#/login";
     return;
   }
-
   try {
-    const tasks = await getTasks(token); // Call the taskService getTasks function
+    const tasks = await getTasks(token);
     tbody.innerHTML = "";
-
     tasks.forEach((task) => {
       const tr = document.createElement("tr");
       const dateObj = new Date(task.datetime);
@@ -291,71 +206,57 @@ async function initListTasks() {
       `;
       tbody.appendChild(tr);
     });
-
-    // Add event listeners for edit and delete buttons
     tbody.querySelectorAll('.edit-task-btn').forEach(button => {
       button.addEventListener('click', (e) => {
         const taskId = e.target.dataset.id;
         location.hash = `#/edit_tasks?id=${taskId}`;
       });
     });
-
-    // Implement delete functionality (you'll need a deleteTask service function)
     tbody.querySelectorAll('.delete-task-btn').forEach(button => {
       button.addEventListener('click', async (e) => {
         const taskId = e.target.dataset.id;
         if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
           try {
-            await deleteTask(taskId, token); // Implement this in taskService
+            await deleteTask(taskId, token);
             alert('Tarea eliminada');
-            initListTasks(); // Reload tasks
+            initListTasks();
           } catch (error) {
             alert(`Error al eliminar tarea: ${error.message}`);
           }
         }
       });
     });
-
   } catch (error) {
     alert(`Error al cargar tareas: ${error.message}`);
-    location.hash = "#/login"; // Redirect to login on error
+    location.hash = "#/login";
   }
 }
 
-/**
- * Initialize the "new_task" view.
- */
 function initNewTask() {
   const form = document.getElementById("createTaskForm");
   if (!form) return;
-
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const token = localStorage.getItem('token');
     if (!token) {
       alert("Por favor inicia sesión");
       location.hash = "#/login";
       return;
     }
-
     const title = form.title.value;
     const detail = form.detail.value;
     const status = form.status.value;
     const date = form.date.value;
     const time = form.time.value;
-
     const datetime = new Date(`${date}T${time}`).toISOString();
-
     try {
-      await createTask({ title, detail, status, datetime }, token); // Call the taskService createTask function
+      await createTask({ title, detail, status, datetime }, token);
       alert("Tarea creada con éxito");
       location.hash = "#/list_tasks";
     } catch (error) {
       alert(`Error al crear tarea: ${error.message}`);
     }
   });
-
   const cancelButton = form.querySelector('.btn-cancel');
   if (cancelButton) {
     cancelButton.addEventListener('click', () => {
@@ -364,10 +265,6 @@ function initNewTask() {
   }
 }
 
-/**
- * Initialize the "edit_tasks" view.
- * @param {string} queryString - The query string containing the task ID.
- */
 async function initEditTask(queryString) {
   const urlParams = new URLSearchParams(queryString);
   const taskId = urlParams.get("id");
@@ -377,16 +274,14 @@ async function initEditTask(queryString) {
     location.hash = "#/list_tasks";
     return;
   }
-
   const token = localStorage.getItem('token');
   if (!token) {
     alert("Por favor inicia sesión");
     location.hash = "#/login";
     return;
   }
-
   try {
-    const task = await getTaskById(taskId, token); // You'll need to implement getTaskById in taskService
+    const task = await getTaskById(taskId, token);
     form.title.value = task.title;
     form.detail.value = task.detail || "";
     form.status.value = task.status;
@@ -398,7 +293,6 @@ async function initEditTask(queryString) {
     location.hash = "#/list_tasks";
     return;
   }
-
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = form.title.value;
@@ -407,16 +301,14 @@ async function initEditTask(queryString) {
     const date = form.date.value;
     const time = form.time.value;
     const datetime = new Date(`${date}T${time}`).toISOString();
-
     try {
-      await updateTask(taskId, { title, detail, status, datetime }, token); // Call the taskService updateTask function
+      await updateTask(taskId, { title, detail, status, datetime }, token);
       alert("Tarea actualizada");
       location.hash = "#/list_tasks";
     } catch (error) {
       alert(`Error al actualizar tarea: ${error.message}`);
     }
   });
-
   const cancelButton = form.querySelector('.btn-cancel');
   if (cancelButton) {
     cancelButton.addEventListener('click', () => {
@@ -425,36 +317,16 @@ async function initEditTask(queryString) {
   }
 }
 
-/**
- * Initialize the "edit_profile" view.
- */
 function initEditProfile() {
   const form = document.querySelector(".profile-form");
   if (!form) return;
-
-  // You would typically load user data here to pre-fill the form
-  // For now, just handle the submit and cancel buttons
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     alert("Funcionalidad de guardar perfil no implementada aún.");
-    // Here you would call a userService function to update the user profile
-    // const userName = form.userName.value;
-    // const userLastName = form.userLastName.value;
-    // const userAge = form.userAge.value;
-    // const userEmail = form.userEmail.value;
-    // try {
-    //   await updateProfile({ userName, userLastName, userAge, userEmail }, token);
-    //   alert("Perfil actualizado con éxito");
-    //   location.hash = "#/some_other_page"; // Redirect after update
-    // } catch (error) {
-    //   alert(`Error al actualizar perfil: ${error.message}`);
-    // }
   });
-
   const cancelButton = form.querySelector('.btn-cancel');
   if (cancelButton) {
     cancelButton.addEventListener('click', () => {
-      // Decide where to go after canceling profile edit, e.g., back to task list
       location.hash = '#/list_tasks';
     });
   }
