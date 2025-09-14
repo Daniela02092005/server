@@ -3,6 +3,7 @@ import { createTask, getTasks, getTaskById, updateTask, deleteTask } from '../se
 
 const app = document.getElementById('app');
 
+
 /**
  * Build a safe URL for fetching view fragments inside Vite (dev and build).
  * @param {string} name - The name of the view (without extension).
