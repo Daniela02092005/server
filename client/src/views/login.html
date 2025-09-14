@@ -1,24 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Login</title>
-  <link rel="stylesheet" href="../styles/index.css">
-  <link rel="stylesheet" href="../styles/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Login</title>
 </head>
 <body>
-  <div class="main">
-    <div class="container">
-      <img src="/CodeNova - logo.jpg" alt="Logo de CodeNova" title="Logo de CodeNova" />
-      <h2>¡Bienvenido!</h2>
+    <div class="main">
+        <div class="container">
+            <img src="/CodeNova - logo.jpg" alt="Logo de CodeNova" title="Logo de CodeNova" />
+            <h2>¡Bienvenido!</h2>
+        </div>
+        <form class="form"> <!-- Added class="form" for consistency -->
+            <input type="email" name="userEmail" placeholder="Correo" required>
+            <input type="password" name="userPassword" placeholder="Contraseña" required>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                <button type="submit">INGRESAR</button>
+                <!-- Changed onclick to a hash link for router compatibility -->
+                <button type="button" onclick="location.hash='#/sign-up'">CREAR CUENTA</button>
+            </div>
+
+            <!-- Changed href to a hash link for router compatibility -->
+            <p><a href="#/recover_password">¿Olvidaste tu contraseña?</a></p>
+        </form>
     </div>
-    <form class="form" id="loginForm">
-      <input type="email" name="userEmail" placeholder="Correo" required />
-      <input type="password" name="userPassword" placeholder="Contraseña" required />
-      <button type="submit">INGRESAR</button>
-      <p><a href="#/recover_password">¿Olvidaste tu contraseña?</a></p>
-      <p>¿No tienes cuenta? <a href="#/sign-up">Regístrate aquí</a></p>
-    </form>
-  </div>
 </body>
 </html>

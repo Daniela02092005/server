@@ -1,33 +1,39 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Editar Tarea</title>
-  <link rel="stylesheet" href="../styles/index.css">
-  <link rel="stylesheet" href="../styles/styles.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Barra superior -->
   <header class="header">
     <h2>Editar Tarea</h2>
     <span class="user-icon">👤</span>
   </header>
 
+  <!-- Contenedor principal -->
   <main class="main">
+    <!-- Formulario -->
     <section class="form">
-      <form id="editTaskForm">
-        <input type="text" name="title" placeholder="Título de Tarea" required />
-        <input type="text" name="detail" placeholder="Detalle de Tarea" />
-        <input type="text" name="status" placeholder="Estado (pending / done)" required />
-        <input type="date" name="date" required />
-        <label for="hora">Hora de la Tarea</label>
-        <input type="time" id="hora" name="time" required />
+      <form id="editTaskForm"> <!-- Added id for easier access in JS -->
+        <input type="text" name="title" placeholder="Título de Tarea" required>
+        <input type="text" name="detail" placeholder="Detalle de Tarea">
+        <input type="text" name="status" placeholder="Estado (pending / done)" required> <!-- Added name -->
+        <input type="date" name="date" required> <!-- Changed type to date -->
+
+        <label for="time">Hora de la Tarea</label>
+        <input type="time" name="time" id="time" required>
+
         <button type="submit" class="btn-save">Actualizar Tarea</button>
         <button type="button" class="btn-cancel">Cancelar</button>
       </form>
     </section>
 
+    <!-- Imagen -->
     <section class="container">
-      <img src="https://cdn-icons-png.flaticon.com/512/747/747993.png" alt="Subir Imagen" />
+      <img src="https://cdn-icons-png.flaticon.com/512/747/747993.png" alt="Subir Imagen">
     </section>
   </main>
 </body>

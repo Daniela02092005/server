@@ -1,31 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Registro de Usuarios</title>
-  <link rel="stylesheet" href="../styles/index.css">
-  <link rel="stylesheet" href="../styles/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Registro de Usuarios</title>
 </head>
 <body>
-  <div class="main">
-    <div class="container">
-      <img src="/CodeNova - logo.jpg" alt="Logo de CodeNova" title="Logo de CodeNova" />
-      <h2>¡Bienvenido!</h2>
+    <div class="main">
+        <div class="container">
+            <img src="/CodeNova - logo.jpg" alt="Logo de CodeNova" title="Logo de CodeNova" />
+            <h2>¡Bienvenido!</h2>
+        </div>
+        <form class="form"> <!-- Added class="form" for consistency -->
+            <input type="text" name="userName" placeholder="Nombres" required>
+            <input type="text" name="userLastName" placeholder="Apellidos" required>
+            <input type="text" name="userAge" placeholder="Edad" required>
+            <input type="email" name="userEmail" placeholder="Correo" required>
+            <input type="password" name="userPassword" placeholder="Contraseña" required>
+            <input type="password" name="confirPassword" placeholder="Confirmar contraseña" required>
+        
+            <div class="terms">
+                <input type="checkbox" id="termsAndConditions" required>
+                <label for="termsAndConditions">Acepto términos y condiciones</label>
+            </div>
+
+            <button type="submit">REGISTRAR</button>
+        </form>
     </div>
-    <form class="form" id="registerForm">
-      <input type="text" name="userName" placeholder="Nombres" required />
-      <input type="text" name="userLastName" placeholder="Apellidos" required />
-      <input type="text" name="userAge" placeholder="Edad" required />
-      <input type="email" name="userEmail" placeholder="Correo" required />
-      <input type="password" name="userPassword" placeholder="Contraseña" required />
-      <input type="password" name="confirPassword" placeholder="Confirmar contraseña" required />
-      <div class="terms">
-        <input type="checkbox" id="termsAndConditions" required />
-        <label for="termsAndConditions">Acepto términos y condiciones</label>
-      </div>
-      <button type="submit">REGISTRAR</button>
-      <p>¿Ya tienes cuenta? <a href="#/login">Inicia sesión aquí</a></p>
-    </form>
-  </div>
 </body>
 </html>

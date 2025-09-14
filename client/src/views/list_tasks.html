@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Listar Tareas</title>
-  <link rel="stylesheet" href="../styles/index.css">
-  <link rel="stylesheet" href="../styles/styles.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
   <div class="container">
+    
+    <!-- Encabezado -->
     <header class="header">
       <h1>Listar Tareas</h1>
       <div class="user-icon">👤</div>
     </header>
 
-    <a href="#/new_task" class="back-btn">➕ Nueva Tarea</a>
+    <!-- Botón regresar -->
+    <a href="#/home" class="back-btn">⬅</a> <!-- Changed href to hash link -->
+    <button onclick="location.hash='#/new_task'" style="margin-top: 10px; padding: 10px 20px; background-color: #8300BF; color: white; border: none; border-radius: 5px; cursor: pointer;">Nueva Tarea</button>
 
+
+    <!-- Tabla de tareas -->
     <table class="task-table">
       <thead>
         <tr>
@@ -24,10 +30,11 @@
           <th>Estado</th>
           <th>Fecha</th>
           <th>Hora</th>
-          <th>Acciones</th> <!-- Added for edit/delete buttons -->
+          <th>Acciones</th> <!-- Added column for actions -->
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody>
+      </tbody>
     </table>
   </div>
 </body>
