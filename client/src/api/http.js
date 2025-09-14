@@ -4,8 +4,9 @@
  * Loaded from Vite environment variables (`VITE_API_URL`).
  */
 const BASE_URL = import.meta.env.VITE_API_URL;
-console.log("API Base URL:", BASE_URL);//traida para verificar en consola
-
+const expectedUrl = "https://codenovaproject.onrender.com/";
+console.log("API Base URL:", BASE_URL);
+console.log("¿Coincide con la URL esperada?", BASE_URL === expectedUrl);
 /**
  * Generic HTTP request helper using Fetch API.
  *
