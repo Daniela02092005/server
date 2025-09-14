@@ -229,7 +229,9 @@ function initSignUp() {
 
     try {
       const data = await registerUser({ username, email, password }); // Call the userService register function
-      if (data.id) {
+      
+      // FIX: validar tanto _id como id
+      if (data._id || data.id) {
         alert("Registro exitoso, por favor inicia sesión");
         location.hash = "#/login"; // Navigate to login
       } else {

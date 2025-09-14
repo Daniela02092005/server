@@ -3,10 +3,9 @@
  * 
  * Loaded from Vite environment variables (`VITE_API_URL`).
  */
-const BASE_URL = import.meta.env.VITE_API_URL;
-const expectedUrl = "https://codenovaproject.onrender.com/";
+const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, ""); // elimina "/" final si existe
 console.log("API Base URL:", BASE_URL);
-console.log("¿Coincide con la URL esperada?", BASE_URL === expectedUrl);
+
 /**
  * Generic HTTP request helper using Fetch API.
  *
@@ -49,33 +48,8 @@ async function request(path, { method = 'GET', headers = {}, body } = {}) {
  * Provides shorthand methods for common HTTP verbs.
  */
 export const http = {
-  /**
-   * Perform a GET request.
-   * @param {string} path - API path.
-   * @param {Object} [opts] - Optional fetch options.
-   */
   get: (path, opts) => request(path, { method: 'GET', ...opts }),
-
-  /**
-   * Perform a POST request.
-   * @param {string} path - API path.
-   * @param {Object} body - Request body.
-   * @param {Object} [opts] - Optional fetch options.
-   */
   post: (path, body, opts) => request(path, { method: 'POST', body, ...opts }),
-
-  /**
-   * Perform a PUT request.
-   * @param {string} path - API path.
-   * @param {Object} body - Request body.
-   * @param {Object} [opts] - Optional fetch options.
-   */
   put: (path, body, opts) => request(path, { method: 'PUT', body, ...opts }),
-
-  /**
-   * Perform a DELETE request.
-   * @param {string} path - API path.
-   * @param {Object} [opts] - Optional fetch options.
-   */
   del: (path, opts) => request(path, { method: 'DELETE', ...opts }),
 };
