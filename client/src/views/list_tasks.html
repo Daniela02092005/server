@@ -13,7 +13,7 @@
       <div class="user-icon">👤</div>
     </header>
 
-    <a href="new_task.html" class="back-btn">➕ Nueva Tarea</a>
+    <a href="#/new_task" class="back-btn">➕ Nueva Tarea</a>
 
     <table class="task-table">
       <thead>
@@ -24,46 +24,11 @@
           <th>Estado</th>
           <th>Fecha</th>
           <th>Hora</th>
+          <th>Acciones</th> <!-- Added for edit/delete buttons -->
         </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
-
-  <script src="api.js"></script>
-  <script>
-    async function loadTasks() {
-      const token = getToken();
-      if (!token) {
-        alert("Por favor inicia sesión");
-        window.location.href = "login.html";
-        return;
-      }
-
-      try {
-        const tasks = await fetchWithAuth(`${API}/tasks`);
-        const tbody = document.querySelector(".task-table tbody");
-        tbody.innerHTML = "";
-
-        tasks.forEach((task) => {
-          const tr = document.createElement("tr");
-          const dateObj = new Date(task.datetime);
-          tr.innerHTML = `
-            <td><input type="checkbox" ${task.status === "done" ? "checked" : ""} disabled></td>
-            <td>${task.title}</td>
-            <td>${task.detail || ""}</td>
-            <td>${task.status}</td>
-            <td>${dateObj.toLocaleDateString()}</td>
-            <td>${dateObj.toLocaleTimeString()}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (error) {
-        alert(error.message);
-      }
-    }
-
-    loadTasks();
-  </script>
 </body>
 </html>

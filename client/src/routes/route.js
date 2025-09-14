@@ -1,5 +1,5 @@
-import { registerUser, loginUser, recoverPassword } from '../services/userService.js'; // Necesitarás crear loginUser y recoverPassword
-import { createTask, getTasks, updateTask } from '../services/taskService.js'; // Necesitarás crear taskService.js
+import { registerUser, loginUser, recoverPassword } from '../services/userService.js';
+import { createTask, getTasks, getTaskById, updateTask, deleteTask } from '../services/taskService.js';
 
 const app = document.getElementById('app');
 
@@ -113,12 +113,15 @@ function initHome() {
     form.querySelector('button[type="submit"]').disabled = true;
 
     try {
-      // This registerUser is for the initial home view, which seems to be a simplified registration.
-      // The sign-up view will handle full registration.
-      const data = await registerUser({ username, password }); // This currently calls /api/v1/users
-      msg.textContent = 'Registro exitoso';
+      // NOTE: The backend register expects 'email' and 'password'.
+      // For initHome to work with the current backend, 'username' should ideally be 'email'.
+      // If 'username' is intended as a display name, the backend register function needs adjustment
+      // or this form should collect an email.
+      // For now, we'll use 'username' as 'email' for the registerUser call to match backend.
+      const data = await registerUser({ username: username, email: username, password: password });
+      msg.textContent = 'Registro exitoso. Por favor, inicia sesión.';
 
-      setTimeout(() => (location.hash = '#/board'), 400);
+      setTimeout(() => (location.hash = '#/login'), 400); // Redirect to login after registration
     } catch (err) {
       msg.textContent = `No se pudo registrar: ${err.message}`;
     } finally {
@@ -245,6 +248,7 @@ function initRecoverPassword() {
     try {
       const data = await recoverPassword({ email }); // Call the userService recover function
       alert(data.message || "Si el correo existe, se ha enviado un enlace de recuperación");
+      location.hash = "#/login"; // Redirect to login after sending recovery link
     } catch (error) {
       alert(error.message);
     }
@@ -301,7 +305,7 @@ async function initListTasks() {
         const taskId = e.target.dataset.id;
         if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
           try {
-            // await deleteTask(taskId, token); // Implement this in taskService
+            await deleteTask(taskId, token); // Implement this in taskService
             alert('Tarea eliminada');
             initListTasks(); // Reload tasks
           } catch (error) {

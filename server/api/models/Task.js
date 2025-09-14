@@ -6,7 +6,7 @@ const TaskSchema = new mongoose.Schema({
   detail:   { type: String },
   datetime: { type: Date },
   status:   { type: String, enum: ["pending", "done"], default: "pending" },
-  userId:   { type: mongoose.Schema.Types.ObjectId, ref: "User " }
+  userId:   { type: mongoose.Schema.Types.ObjectId, ref: "User" } // Changed "User " to "User"
 }, { timestamps: true });
 
 module.exports = mongoose.model("Task", TaskSchema);
