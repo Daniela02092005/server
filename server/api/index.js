@@ -16,9 +16,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //app.use(cors())
 
+//Creacion de esta parte para evitar restricciones con vercel
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "https://code-nova-project.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+
+
+
+
 //Creacion de constante para cors
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "https://code-nova-project.vercel.app/",
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

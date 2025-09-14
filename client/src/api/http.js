@@ -4,6 +4,7 @@
  * Loaded from Vite environment variables (`VITE_API_URL`).
  */
 const BASE_URL = import.meta.env.VITE_API_URL;
+console.log("API Base URL:", BASE_URL);//traida para verificar en consola
 
 /**
  * Generic HTTP request helper using Fetch API.

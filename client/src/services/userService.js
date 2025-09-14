@@ -7,7 +7,7 @@ import { http } from '../api/http.js';
  * with the provided username, email, and password.
  *
  * @async
- * @function registerUser
+ * @function registerUser 
  * @param {Object} params - User registration data.
  * @param {string} params.username - The username of the new user.
  * @param {string} params.email - The email of the new user.
@@ -15,8 +15,14 @@ import { http } from '../api/http.js';
  * @returns {Promise<Object>} The created user object returned by the API.
  * @throws {Error} If the API responds with an error status or message.
  */
-export async function registerUser({ username, email, password }) {
-  return http.post('/api/v1/auth/register', { username, email, password });
+export async function registerUser ({ username, email, password }) {
+  try {
+    const response = await http.post('/api/v1/auth/register', { username, email, password });
+    return response;
+  } catch (error) {
+    // Puedes personalizar el manejo de errores aquí
+    throw new Error(error?.response?.data?.message || 'Error registering user');
+  }
 }
 
 /**
@@ -26,15 +32,20 @@ export async function registerUser({ username, email, password }) {
  * with the provided email and password.
  *
  * @async
- * @function loginUser
+ * @function loginUser 
  * @param {Object} params - User login data.
  * @param {string} params.email - The email of the user.
  * @param {string} params.password - The password of the user.
  * @returns {Promise<Object>} An object containing the authentication token and user details.
  * @throws {Error} If the API responds with an error status or message.
  */
-export async function loginUser({ email, password }) {
-  return http.post('/api/v1/auth/login', { email, password });
+export async function loginUser ({ email, password }) {
+  try {
+    const response = await http.post('/api/v1/auth/login', { email, password });
+    return response;
+  } catch (error) {
+    throw new Error(error?.response?.data?.message || 'Error logging in');
+  }
 }
 
 /**
@@ -51,12 +62,22 @@ export async function loginUser({ email, password }) {
  * @throws {Error} If the API responds with an error status or message.
  */
 export async function recoverPassword({ email }) {
-  return http.post('/api/v1/auth/recover', { email });
+  try {
+    const response = await http.post('/api/v1/auth/recover', { email });
+    return response;
+  } catch (error) {
+    throw new Error(error?.response?.data?.message || 'Error recovering password');
+  }
 }
 
-// You might want to add a logout function here as well
-export function logoutUser() {
+/**
+ * Log out the current user.
+ *
+ * Removes the authentication token from localStorage.
+ * Optionally, you can call the backend to invalidate the token.
+ */
+export function logoutUser () {
   localStorage.removeItem('token');
-  // Optionally, make a backend call to invalidate the token if your backend supports it
+  // Si tu backend soporta logout, descomenta la siguiente línea:
   // http.post('/api/v1/auth/logout');
 }
