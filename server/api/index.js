@@ -4,7 +4,7 @@ require("dotenv").config();
 const cors = require("cors");
 
 //importamos a connectDB
-const { connectDB } = require("../../database/config/database");
+const {connectDB} = require("./config/database");
 //Importamos el router principal en index.js
 const routes = require("./routes/routes.js");
 
