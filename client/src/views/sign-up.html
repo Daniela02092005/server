@@ -9,7 +9,7 @@
 <body>
   <div class="main">
     <div class="container">
-      <img src="CodeNova - logo.jpg" alt="Logo de CodeNova" title="Logo de CodeNova" />
+      <img src="/CodeNova - logo.jpg" alt="Logo de CodeNova" title="Logo de CodeNova" />
       <h2>¡Bienvenido!</h2>
     </div>
     <form class="form" id="registerForm">
@@ -23,42 +23,9 @@
         <input type="checkbox" id="termsAndConditions" required />
         <label for="termsAndConditions">Acepto términos y condiciones</label>
       </div>
-      <button>REGISTRAR</button>
+      <button type="submit">REGISTRAR</button>
+      <p>¿Ya tienes cuenta? <a href="#/login">Inicia sesión aquí</a></p>
     </form>
   </div>
-
-  <script src="api.js"></script>
-  <script>
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const username = e.target.userName.value;
-      const email = e.target.userEmail.value;
-      const password = e.target.userPassword.value;
-      const confirmPassword = e.target.confirPassword.value;
-
-      if (password !== confirmPassword) {
-        alert("Las contraseñas no coinciden");
-        return;
-      }
-
-      try {
-        const data = await fetch(`${API}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, email, password }),
-        }).then(res => res.json());
-
-        if (data.id) {
-          alert("Registro exitoso, por favor inicia sesión");
-          window.location.href = "login.html";
-        } else {
-          alert(data.message || "Error en registro");
-        }
-      } catch (error) {
-        alert(error.message);
-      }
-    });
-  </script>
 </body>
 </html>

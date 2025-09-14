@@ -9,5 +9,5 @@ const UserSchema = new mongoose.Schema({
   resetTokenExp: { type: Date }
 }, { timestamps: true });
 
-module.exports = mongoose.model("User ", UserSchema);
+module.exports = mongoose.model("User", UserSchema); 
 
