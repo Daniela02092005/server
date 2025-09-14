@@ -2,10 +2,10 @@ import { http } from '../api/http.js';
 
 /**
  * Helper to get authorization headers.
+ * @param {string} token - The authentication token.
  * @returns {Object} Headers object with Authorization token if available.
  */
-function getAuthHeaders() {
-  const token = localStorage.getItem('token');
+function getAuthHeaders(token) {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -19,7 +19,7 @@ function getAuthHeaders() {
  * @throws {Error} If the API responds with an error.
  */
 export async function createTask(taskData, token) {
-  return http.post('/api/v1/tasks', taskData, { headers: getAuthHeaders() });
+  return http.post('/api/v1/tasks', taskData, { headers: getAuthHeaders(token) });
 }
 
 /**
@@ -31,7 +31,7 @@ export async function createTask(taskData, token) {
  * @throws {Error} If the API responds with an error.
  */
 export async function getTasks(token) {
-  return http.get('/api/v1/tasks', { headers: getAuthHeaders() });
+  return http.get('/api/v1/tasks', { headers: getAuthHeaders(token) });
 }
 
 /**
@@ -44,7 +44,7 @@ export async function getTasks(token) {
  * @throws {Error} If the API responds with an error.
  */
 export async function getTaskById(taskId, token) {
-  return http.get(`/api/v1/tasks/${taskId}`, { headers: getAuthHeaders() });
+  return http.get(`/api/v1/tasks/${taskId}`, { headers: getAuthHeaders(token) });
 }
 
 /**
@@ -58,7 +58,7 @@ export async function getTaskById(taskId, token) {
  * @throws {Error} If the API responds with an error.
  */
 export async function updateTask(taskId, taskData, token) {
-  return http.put(`/api/v1/tasks/${taskId}`, taskData, { headers: getAuthHeaders() });
+  return http.put(`/api/v1/tasks/${taskId}`, taskData, { headers: getAuthHeaders(token) });
 }
 
 /**
@@ -71,5 +71,5 @@ export async function updateTask(taskId, taskData, token) {
  * @throws {Error} If the API responds with an error.
  */
 export async function deleteTask(taskId, token) {
-  return http.del(`/api/v1/tasks/${taskId}`, { headers: getAuthHeaders() });
+  return http.del(`/api/v1/tasks/${taskId}`, { headers: getAuthHeaders(token) });
 }
