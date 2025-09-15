@@ -1,12 +1,19 @@
-// server/api/controllers/TaskController.js
+/* The lines `const GlobalController = require("./GlobalController");` and `const TaskDAO =
+require("../dao/TaskDAO");` are importing external modules into the current file. */
 const GlobalController = require("./GlobalController");
 const TaskDAO = require("../dao/TaskDAO");
 
+/* The `TaskController` class manages CRUD operations for tasks associated with authenticated users. */
 class TaskController extends GlobalController {
+  /**
+   * The constructor function initializes an object with TaskDAO as its superclass.
+   */
   constructor() {
     super(TaskDAO);
   }
 
+ /* The `create` method in the `TaskController` class is responsible for creating a new task. Here's a
+ breakdown of what the method does: */
   // Create
   async create(req, res) {
     try {
@@ -19,6 +26,8 @@ class TaskController extends GlobalController {
     }
   }
 
+  /* The `getAll` method in the `TaskController` class is responsible for retrieving all tasks
+  associated with the authenticated user. Here's a breakdown of what the method does: */
   // getAll
   async getAll(req, res) {
     try {
@@ -31,6 +40,8 @@ class TaskController extends GlobalController {
     }
   }
 
+ /* The `read` method in the `TaskController` class is responsible for handling the retrieval of a
+ specific task based on the provided task ID. Here is a breakdown of what the method does: */
   // Read
   async read(req, res) {
     try {
@@ -45,6 +56,8 @@ class TaskController extends GlobalController {
     }
   }
 
+  /* The `update` method in the `TaskController` class is responsible for handling the updating of a
+  task. Here is a breakdown of what the method does: */
   // Update
   async update(req, res) {
     try {
@@ -63,6 +76,8 @@ class TaskController extends GlobalController {
     }
   }
 
+  /* The `delete` method in the `TaskController` class is responsible for handling the deletion of a
+  task. Here is a breakdown of what the method does: */
   // Delete
   async delete(req, res) {
     try {
@@ -80,4 +95,8 @@ class TaskController extends GlobalController {
 }
 
 //Exportar
+/* `module.exports = new TaskController();` is exporting an instance of the `TaskController` class.
+This allows other parts of the codebase to import and use this instance of the `TaskController`
+class, which provides access to the methods defined within the class such as create, getAll, read,
+update, and delete for handling tasks in the application. */
 module.exports = new TaskController();
