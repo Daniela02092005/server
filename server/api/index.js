@@ -69,5 +69,3 @@ module.exports = app;
 // Establishes a connection to the MongoDB database using the configuration 
 // defined in ./config/database. This is necessary for handling data persistence 
 // such as users, products, or any other collections used by the application.
-
-
