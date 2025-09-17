@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // Configuración de CORS
 // CORS configuration
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "https://code-nova-project.vercel.app",
+  process.env.FRONTEND_URL || "https://client-theta-bay.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
