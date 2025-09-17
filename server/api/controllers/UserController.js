@@ -54,6 +54,22 @@ class UserController {
       res.status(400).json({ message: err.message });
     }
   }
+
+  //Update prifile
+  async updateProfile(req, res) {
+    try {
+      if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
+      const updateData = { ...req.body };
+      // Evitar que se actualice la contraseña o el email directamente por esta ruta si no es el propósito
+      delete updateData.password; 
+      delete updateData.email;
+      const updatedUser = await UserDAO.update(req.userId, updateData);
+      res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+
 }
 
 //Exportar

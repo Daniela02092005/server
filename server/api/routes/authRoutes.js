@@ -8,4 +8,10 @@ router.post("/register", (req, res) => UserController.register(req, res));
 router.post("/login", (req, res) => UserController.login(req, res));
 router.post("/logout", (req, res) => UserController.logout(req, res));
 router.post("/recover", (req, res) => UserController.recover(req, res));
+
+//Ruta actualizacion
+
+router.put("/profile", auth, (req, res) => UserController.updateProfile(req, res));
+        
+            
 module.exports = router;
