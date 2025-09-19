@@ -15,18 +15,6 @@ const UserDAO = require("../dao/UserDAO");
  * recuperación de contraseña y actualización de perfil.
  */
 class UserController extends GlobalController {
-  /**
-   * Create a new UserController instance.
-   * Crear una nueva instancia de UserController.
-   *
-   * The constructor passes the UserDAO to the parent class so that
-   * all inherited methods (create, read, update, delete, getAll)
-   * operate on the User model.
-   *
-   * El constructor pasa el UserDAO a la clase padre para que todos los
-   * métodos heredados (create, read, update, delete, getAll) operen
-   * sobre el modelo de usuario.
-   */
   constructor() {
     super(UserDAO);
   }
@@ -97,13 +85,32 @@ class UserController extends GlobalController {
       res.status(400).json({ message: err.message });
     }
   }
+
+  /**
+   * Get profile of the authenticated user.
+   * Obtener el perfil del usuario autenticado.
+   *
+   * Requires the `auth` middleware to set `req.userId`.
+   * Requiere que el middleware `auth` establezca `req.userId`.
+   */
+  async getProfile(req, res) {
+    try {
+      const userId = req.userId;
+      const user = await UserDAO.model
+        .findById(userId)
+        .select("-password -resetToken -resetTokenExp"); // Exclude sensitive fields / Excluir campos sensibles
+
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      res.status(200).json(user);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
 }
 
 /**
  * Export a singleton instance of UserController.
  * Exportar una instancia única de UserController.
- *
- * This allows reuse across routes without creating multiple instances.
- * Esto permite reutilizarlo en las rutas sin crear múltiples instancias.
  */
 module.exports = new UserController();

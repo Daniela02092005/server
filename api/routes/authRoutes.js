@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const UserController = require("../controllers/UserController");
+const authMiddleware = require("../middlewares/auth"); // Middleware de autenticación
 
 // Authentication-related routes / Rutas relacionadas con autenticación
 
@@ -24,10 +25,16 @@ router.post("/login", (req, res) => UserController.login(req, res));
 router.post("/logout", (req, res) => UserController.logout(req, res));
 
 /**
- * Recover account (reset password request)
- * Recuperar cuenta (solicitud de restablecimiento de contraseña)
+ * Recover account (start password reset process)
+ * Recuperar cuenta (iniciar proceso de restablecimiento de contraseña)
  */
 router.post("/recover", (req, res) => UserController.recover(req, res));
+
+/**
+ * Get profile of authenticated user
+ * Obtener perfil del usuario autenticado
+ */
+router.get("/profile", authMiddleware, (req, res) => UserController.getProfile(req, res));
 
 /**
  * Export authentication router
