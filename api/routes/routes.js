@@ -1,42 +1,51 @@
+// Enrutador principal / Main router
 //importemos express y el módulo de rutas
 const express = require("express");
 const router = express.Router();
 
-//Crear enrutadores raiz
 // Import feature-specific route modules
+// Importar módulos de rutas específicas
 const authRoutes = require("./authRoutes");
+const userRoutes = require("./userRoutes");
 const taskRoutes = require("./taskRoutes");
 
 /**
- * Mount authentication-related routes.
+ * Mount authentication-related routes under /auth
+ * Montar rutas relacionadas con autenticación bajo /auth
  *
- * All routes defined in {@link authRoutes} will be accessible under `/auth`.
- * Example:
- *   - POST   /auth/login       → User login
- *   - POST   /auth/register    → User registration
- *   - GET    /auth/profile     → Get logged user profile
+ * Example / Ejemplo:
+ *   POST /auth/login
+ *   POST /auth/register
  */
-//Montamos el enrutador auth
 router.use("/auth", authRoutes);
 
 /**
- * Mount task-related routes.
+ * Mount user-related routes under /users
+ * Montar rutas relacionadas con usuarios bajo /users
  *
- * All routes defined in {@link taskRoutes} will be accessible under `/tasks`.
- * Example:
- *   - GET    /tasks            → Get all tasks
- *   - POST   /tasks            → Create a new task
- *   - GET    /tasks/:id        → Get task by ID
- *   - PUT    /tasks/:id        → Update task by ID
- *   - DELETE /tasks/:id        → Delete task by ID
+ * Example / Ejemplo:
+ *   PUT /users/profile
  */
-//Montamos el enrutador tasks
+router.use("/users", userRoutes);
+
+/**
+ * Mount task-related routes under /tasks
+ * Montar rutas relacionadas con tareas bajo /tasks
+ *
+ * Example / Ejemplo:
+ *   GET    /tasks
+ *   POST   /tasks
+ *   GET    /tasks/:id
+ *   PUT    /tasks/:id
+ *   DELETE /tasks/:id
+ */
 router.use("/tasks", taskRoutes);
 
 /**
- * Export the main router instance.
- * This is imported in `index.js` and mounted under `/api/v1`.
+ * Export main router instance
+ * Exportar instancia principal de enrutador
+ *
+ * Imported in index.js and mounted under /api/v1
+ * Importado en index.js y montado bajo /api/v1
  */
-
-//Exportamos el enrutador
 module.exports = router;

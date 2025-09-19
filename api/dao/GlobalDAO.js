@@ -1,82 +1,126 @@
-//Crear Constructor de dao
-/* The `GlobalDAO` class is a JavaScript constructor that provides methods for creating, reading,
-updating, deleting, and retrieving documents from a database. */
+/**
+ * Generic Data Access Object (DAO) class.
+ * Clase Genérica de Acceso a Datos (DAO).
+ *
+ * Provides reusable CRUD operations for any Mongoose model.
+ * Proporciona operaciones CRUD reutilizables para cualquier modelo de Mongoose.
+ *
+ * Specific DAOs (e.g., UserDAO, TaskDAO) should extend this class
+ * DAOs específicos (ej: UserDAO, TaskDAO) deben extender esta clase
+ * and inject their model via the constructor.
+ * e inyectar su modelo a través del constructor.
+ */
 class GlobalDAO {
   /**
-   * The above function is a JavaScript constructor that initializes an object with a model property.
-   * @param model - The `model` parameter in the constructor function is used to initialize and store
-   * the model value for the object being created.
+   * Create a new GlobalDAO.
+   * Crear un nuevo GlobalDAO.
+   * @param {import("mongoose").Model} model - The Mongoose model to operate on.
+   *                                           El modelo de Mongoose con el que operar.
    */
   constructor(model) {
     this.model = model;
   }
 
-  /* The `create` method in the `GlobalDAO` class is a function that is responsible for creating a new
-  document in the database. Here's a breakdown of what it does: */
-  //Create
+  /**
+   * Create and persist a new document.
+   * Crear y guardar un nuevo documento.
+   * @async
+   * @param {Object} data - The data used to create the document.
+   *                        Los datos usados para crear el documento.
+   * @returns {Promise<Object>} The created document. / El documento creado.
+   */
   async create(data) {
     try {
-      const doc = new this.model(data);
+      const doc = new this.model(data); 
       return await doc.save();
     } catch (error) {
-      throw new Error(`Error creating document: ${error.message}`);
+      throw new Error(`Error creating document / Error creando documento: ${error.message}`);
     }
   }
 
-  /* The `read` method in the `GlobalDAO` class is a function that retrieves a document from the
-  database based on the provided `id`. Here's a breakdown of what it does: */
-  //Read
+  /**
+   * Find a document by its ID.
+   * Buscar un documento por su ID.
+   * @async
+   * @param {string} id - The document's unique identifier.
+   *                      El identificador único del documento.
+   * @returns {Promise<Object>} The found document. / El documento encontrado.
+   */
   async read(id) {
     try {
       const doc = await this.model.findById(id);
-      if (!doc) throw new Error("Document not found");
+      if (!doc) throw new Error("Document not found / Documento no encontrado");
       return doc;
     } catch (error) {
-      throw new Error(`Error getting document by ID: ${error.message}`);
+      throw new Error(`Error getting document by ID / Error obteniendo documento por ID: ${error.message}`);
     }
   }
 
-  /* The `update` method in the `GlobalDAO` class is a function that updates a document in the database
-  based on the provided `id` and `updateData`. Here's a breakdown of what it does: */
-  //Update
+  /**
+   * Update a document by ID.
+   * Actualizar un documento por su ID.
+   * @async
+   * @param {string} id - The document's unique identifier.
+   *                      El identificador único del documento.
+   * @param {Object} updateData - The data to update the document with.
+   *                              Los datos para actualizar el documento.
+   * @returns {Promise<Object>} The updated document. / El documento actualizado.
+   */
   async update(id, updateData) {
     try {
-      const updated = await this.model.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
-      if (!updated) throw new Error("Document not found");
+      const updated = await this.model.findByIdAndUpdate( 
+        id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+      if (!updated) throw new Error("Document not found / Documento no encontrado");
       return updated;
     } catch (error) {
-      throw new Error(`Error updating document: ${error.message}`);
+      throw new Error(`Error updating document / Error actualizando documento: ${error.message}`);
     }
   }
 
-  /* The `delete` method in the `GlobalDAO` class is a function that deletes a document from the
-  database based on the provided `id`. Here's a breakdown of what it does: */
-  //Delete
+  /**
+   * Delete a document by ID.
+   * Eliminar un documento por su ID.
+   * @async
+   * @param {string} id - The document's unique identifier.
+   *                      El identificador único del documento.
+   * @returns {Promise<Object>} The deleted document. / El documento eliminado.
+   */
   async delete(id) {
     try {
-      const deleted = await this.model.findByIdAndDelete(id);
-      if (!deleted) throw new Error("Document not found");
+      const deleted = await this.model.findByIdAndDelete(id); 
+      if (!deleted) throw new Error("Document not found / Documento no encontrado");
       return deleted;
     } catch (error) {
-      throw new Error(`Error deleting document: ${error.message}`);
+      throw new Error(`Error deleting document / Error eliminando documento: ${error.message}`);
     }
   }
 
- /* The `getAll` method in the `GlobalDAO` class is a function that retrieves all documents from the
- database based on an optional filter. Here's a breakdown of what it does: */
-  //GetAll
+  /**
+   * Retrieve all documents matching the given filter.
+   * Recuperar todos los documentos que coincidan con el filtro dado.
+   * @async
+   * @param {Object} [filter={}] - Optional MongoDB filter object.
+   *                               Objeto de filtro de MongoDB opcional.
+   * @returns {Promise<Array>} An array of matching documents. 
+   *                           Un arreglo con los documentos encontrados.
+   */
   async getAll(filter = {}) {
     try {
       return await this.model.find(filter);
     } catch (error) {
-      throw new Error(`Error getting documents: ${error.message}`);
+      throw new Error(`Error getting documents / Error obteniendo documentos: ${error.message}`);
     }
   }
 }
 
-/* The `//Exportar DAO` comment is indicating that the following line `module.exports = GlobalDAO;` is
-exporting the `GlobalDAO` class so that it can be used in other files/modules. By exporting the
-`GlobalDAO` class, other files can import and use this class to interact with the database using the
-defined CRUD operations. */
-//Exportar DAO
+/**
+ * Export the DAO class so it can be used by specific DAOs.
+ * Exportar la clase DAO para que pueda ser usada por DAOs específicos.
+ *
+ * Example / Ejemplo:
+ *   const UserDAO = new GlobalDAO(UserModel);
+ */
 module.exports = GlobalDAO;

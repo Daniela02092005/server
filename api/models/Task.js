@@ -1,23 +1,59 @@
-/* The code `//creamos el esquema de las tareas` is a comment written in Spanish, which translates to
-"we create the tasks schema" in English. It is indicating that the following code is defining the
-schema for tasks in a MongoDB database using Mongoose, a MongoDB object modeling tool designed to
-work in an asynchronous environment. */
-//creamos el esquema de las tareas
+//Creamos el esquema de las tareas
 const mongoose = require("mongoose");
 
-/* This code snippet is defining a Mongoose schema for tasks in a MongoDB database. Let's break down
-what each part of the schema is doing: */
-const TaskSchema = new mongoose.Schema({
-  title:    { type: String, required: true },
-  detail:   { type: String },
-  datetime: { type: Date },
-  status:   { type: String, enum: ["pending", "done"], default: "pending" },
-  userId:   { type: mongoose.Schema.Types.ObjectId, ref: "User" } // Changed "User " to "User"
-}, { timestamps: true });
+/**
+ * Task schema definition.
+ * Definición del esquema de tareas.
+ *
+ * Represents tasks created by users in the application.
+ * Representa las tareas creadas por los usuarios en la aplicación.
+ *
+ * Includes title, detail, date/time, status, and user reference.
+ * Incluye título, detalle, fecha/hora, estado y referencia al usuario.
+ */
+const TaskSchema = new mongoose.Schema(
+  {
+    /**
+     * Title of the task.
+     * Título de la tarea.
+     */
+    title: { type: String, required: true },
 
-/* `module.exports = mongoose.model("Task", TaskSchema);` is exporting a Mongoose model named "Task"
-based on the TaskSchema defined earlier. This line of code allows other parts of the application to
-import and use the "Task" model to interact with the MongoDB database collection that stores tasks.
-The model will have properties defined in the TaskSchema, such as title, detail, datetime, status,
-and userId, along with timestamps for createdAt and updatedAt. */
+    /**
+     * Detailed description of the task (optional).
+     * Descripción detallada de la tarea (opcional).
+     */
+    detail: { type: String },
+
+    /**
+     * Date and time of the task.
+     * Fecha y hora de la tarea.
+     */
+    datetime: { type: Date },
+
+    /**
+     * Status of the task: pending or done.
+     * Estado de la tarea: pendiente o completada.
+     */
+    status: { type: String, enum: ["pending", "done"], default: "pending" },
+
+    /**
+     * Reference to the user who owns the task.
+     * Referencia al usuario dueño de la tarea.
+     */
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+  },
+  {
+    /**
+     * Adds `createdAt` and `updatedAt` automatically.
+     * Añade `createdAt` y `updatedAt` automáticamente.
+     */
+    timestamps: true
+  }
+);
+
+/**
+ * Mongoose model for the Task collection.
+ * Modelo Mongoose para la colección Task.
+ */
 module.exports = mongoose.model("Task", TaskSchema);

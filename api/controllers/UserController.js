@@ -1,18 +1,40 @@
-/* The code snippet `//Creacion de el controlador user` is a comment written in Spanish, which
-translates to "Creation of the user controller" in English. It is likely indicating the purpose or
-intention of the following code block, which includes importing the `UserDAO` module from the
-"../dao/UserDAO" path. This import statement is essential for the `UserController` class to interact
-with the data access object (DAO) responsible for handling user-related database operations. */
-//Creacion de el controlador user
+//Creacion del controlador User
+const GlobalController = require("./GlobalController");
 const UserDAO = require("../dao/UserDAO");
 
-/* The `UserController` class in JavaScript handles user registration, login, logout, and recovery
-functionalities. */
-class UserController {
-    
- /* The `register` method in the `UserController` class is handling the registration functionality for
- a user. Here's a breakdown of what it does: */
-  //Register
+/**
+ * Controller class for managing User resources and authentication.
+ * Clase controladora para gestionar recursos de usuario y autenticación.
+ *
+ * Extends the generic {@link GlobalController} to inherit CRUD operations,
+ * and adds specific methods for user registration, login, logout,
+ * password recovery, and profile updates.
+ *
+ * Extiende el {@link GlobalController} genérico para heredar operaciones CRUD,
+ * y agrega métodos específicos para registro de usuarios, inicio/cierre de sesión,
+ * recuperación de contraseña y actualización de perfil.
+ */
+class UserController extends GlobalController {
+  /**
+   * Create a new UserController instance.
+   * Crear una nueva instancia de UserController.
+   *
+   * The constructor passes the UserDAO to the parent class so that
+   * all inherited methods (create, read, update, delete, getAll)
+   * operate on the User model.
+   *
+   * El constructor pasa el UserDAO a la clase padre para que todos los
+   * métodos heredados (create, read, update, delete, getAll) operen
+   * sobre el modelo de usuario.
+   */
+  constructor() {
+    super(UserDAO);
+  }
+
+  /**
+   * Handle user registration.
+   * Maneja el registro de usuario.
+   */
   async register(req, res) {
     try {
       const user = await UserDAO.register(req.body);
@@ -22,9 +44,10 @@ class UserController {
     }
   }
 
-  /* The `login` method in the `UserController` class is handling the login functionality for a user.
-  Here's a breakdown of what it does: */
-  //Login
+  /**
+   * Handle user login.
+   * Maneja el inicio de sesión de usuario.
+   */
   async login(req, res) {
     try {
       const result = await UserDAO.login(req.body);
@@ -34,18 +57,18 @@ class UserController {
     }
   }
 
-  /* The `logout` method in the `UserController` class is handling the logout functionality for a user.
-  When this method is called, it simply responds with a JSON object containing a message indicating
-  that the logout was successful. This method does not perform any complex operations but serves as
-  a simple confirmation message to indicate that the user has been successfully logged out. */
-  //Logout
+  /**
+   * Handle user logout.
+   * Maneja el cierre de sesión de usuario.
+   */
   logout(req, res) {
     res.json({ message: "Logout successful" });
   }
 
-  /* The `recover` method in the `UserController` class is handling the recovery process for a user.
-  Here's a breakdown of what it does: */
-  //Recover
+  /**
+   * Handle user account recovery.
+   * Maneja la recuperación de cuenta de usuario.
+   */
   async recover(req, res) {
     try {
       const token = await UserDAO.recover(req.body);
@@ -55,26 +78,32 @@ class UserController {
     }
   }
 
-  //Update prifile
+  /**
+   * Update user profile (excluding password and email by default).
+   * Actualiza el perfil del usuario (excluye contraseña y correo por defecto).
+   */
   async updateProfile(req, res) {
     try {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
+
       const updateData = { ...req.body };
-      // Evitar que se actualice la contraseña o el email directamente por esta ruta si no es el propósito
-      delete updateData.password; 
+      // Prevent sensitive fields from being updated directly / Evitar actualización directa de campos sensibles
+      delete updateData.password;
       delete updateData.email;
+
       const updatedUser = await UserDAO.update(req.userId, updateData);
       res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
   }
-
 }
 
-//Exportar
-/* `module.exports = new UserController();` is exporting an instance of the `UserController` class.
-This allows other parts of the codebase to import and use the methods defined in the
-`UserController` class. By exporting an instance of the class, you can access the methods like
-`register`, `login`, `logout`, and `recover` in other files that import this module. */
+/**
+ * Export a singleton instance of UserController.
+ * Exportar una instancia única de UserController.
+ *
+ * This allows reuse across routes without creating multiple instances.
+ * Esto permite reutilizarlo en las rutas sin crear múltiples instancias.
+ */
 module.exports = new UserController();

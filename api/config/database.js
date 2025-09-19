@@ -1,16 +1,32 @@
-//cargamos dependencias y variables de entorno
-/*The code `const mongoose = require("mongoose"); require("dotenv").config();` is loading the
-`mongoose` library and configuring the environment variables using `dotenv`. */
+// Load dependencies and environment variables
+// Cargar dependencias y variables de entorno
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-//Creamos dos funciones asincrónicas para conectar y otra para desconectar a la BD
 /**
- * The function `connectDB` connects to a MongoDB database using the Mongoose library in JavaScript.
+ * Establish a connection to the MongoDB database.
+ * Establecer conexión a la base de datos MongoDB.
+ *
+ * Uses the connection string provided in the environment variable `MONGO_URI`.
+ * Utiliza la cadena de conexión en la variable de entorno `MONGO_URI`.
+ *
+ * On success: logs confirmation.
+ * En éxito: muestra mensaje de confirmación.
+ *
+ * On failure: logs the error and terminates the process.
+ * En fallo: muestra error y termina el proceso.
+ *
+ * @async
+ * @function connectDB
+ * @returns {Promise<void>} Resolves when the connection is established.
+ *                          Se resuelve cuando la conexión es establecida.
  */
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,   // Explicitly parse connection strings / Analizar cadena de conexión explícitamente
+      useUnifiedTopology: true // Use new server discovery engine / Usar nuevo motor de descubrimiento
+    });
     console.log("Connected to MongoDB");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error.message);
@@ -19,8 +35,16 @@ const connectDB = async () => {
 };
 
 /**
- * The `disconnectDB` function asynchronously disconnects from MongoDB and logs a message upon
- * successful disconnection or an error message if there is an error.
+ * Disconnect from the MongoDB database.
+ * Desconectar de la base de datos MongoDB.
+ *
+ * Gracefully closes the active connection and logs the result.
+ * Cierra la conexión activa y muestra el resultado.
+ *
+ * @async
+ * @function disconnectDB
+ * @returns {Promise<void>} Resolves when the connection is closed.
+ *                          Se resuelve cuando la conexión se cierra.
  */
 const disconnectDB = async () => {
   try {
@@ -31,9 +55,8 @@ const disconnectDB = async () => {
   }
 };
 
-
-/* `module.exports = { connectDB, disconnectDB };` is exporting the `connectDB` and `disconnectDB`
-functions so that they can be used in other files or modules. This allows other parts of the
-codebase to import and utilize these functions for connecting to and disconnecting from a MongoDB
-database using Mongoose. */
+/**
+ * Export connection helpers
+ * Exportar funciones de conexión
+ */
 module.exports = { connectDB, disconnectDB };
