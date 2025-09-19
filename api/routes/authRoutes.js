@@ -41,3 +41,9 @@ router.get("/profile", authMiddleware, (req, res) => UserController.getProfile(r
  * Exportar enrutador de autenticación
  */
 module.exports = router;
+
+/**
+* Reset user password
+* Restablecer contraseña de usuario
+*/
+router.post("/reset-password", (req, res) => UserController.resetPassword(req, res));

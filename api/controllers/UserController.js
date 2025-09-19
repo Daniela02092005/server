@@ -107,6 +107,21 @@ class UserController extends GlobalController {
       res.status(500).json({ message: err.message });
     }
   }
+
+  /**
+  * Handle password reset.
+  * Maneja el restablecimiento de contraseña.
+  */
+  async resetPassword(req, res) {
+    try {
+      const { token, newPassword } = req.body;
+      const result = await UserDAO.resetPassword(token, newPassword);
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ message: err.message });
+    }
+  }
+  
 }
 
 /**

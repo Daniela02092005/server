@@ -1,11 +1,12 @@
 //creemos la clase que hereda a GlobalDAO y importa el modelo del User
-
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
 const GlobalDAO = require("./GlobalDAO");
 const User = require("../models/User");
+// Importar el servicio de correo
+const { sendRecoveryEmail } = require("../services/emailService"); 
 
 /**
  * Data Access Object (DAO) for the User model.
@@ -80,23 +81,60 @@ class UserDAO extends GlobalDAO {
   }
 
   /**
-   * Generate a password recovery token.
-   * Generar un token para recuperación de contraseña.
-   *
-   * @param {Object} param0 - { email }
-   * @returns {Promise<string>} Reset token
-   */
+  * Generate a password recovery token and send email.
+  * Generar un token para recuperación de contraseña y enviar correo.
+  *
+  * @param {Object} param0 - { email }
+  * @returns {Promise<string>} Message indicating recovery started.
+  */
   async recover({ email }) {
     const user = await this.model.findOne({ email });
-    if (!user) throw new Error("User not found / Usuario no encontrado");
+    if (!user) {
+      // No revelar si el usuario existe o no por seguridad
+      console.log(`Intento de recuperación de contraseña para correo no registrado: ${email}`);
+      throw new Error("If the email exists, a recovery link has been sent / Si el correo existe, se ha enviado un enlace de recuperación");
+    }
 
-    const token = crypto.randomBytes(16).toString("hex");
+    const token = crypto.randomBytes(32).toString("hex"); // Token más largo para mayor seguridad
     user.resetToken = token;
     user.resetTokenExp = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
     await user.save();
-
-    return token;
+    
+    // Enviar el correo electrónico
+    try {
+      await sendRecoveryEmail(user.email, token);
+      return "Recovery email sent / Correo de recuperación enviado";
+    } catch (emailError) {
+      console.error("Error sending recovery email:", emailError);
+      throw new Error("Error sending recovery email / Error al enviar correo de recuperación");
+    }
   }
+
+  /**
+  * Reset user password using a recovery token.
+  * Restablecer la contraseña del usuario usando un token de recuperación.
+  *
+  * @param {string} token - The recovery token.
+  * @param {string} newPassword - The new password.
+  * @returns {Promise<Object>} The updated user.
+  */
+  async resetPassword(token, newPassword) {
+    const user = await this.model.findOne({
+      resetToken: token,
+      resetTokenExp: { $gt: Date.now() }, // Token no expirado
+    });
+    if (!user) {
+      throw new Error("Invalid or expired password reset token / Token de restablecimiento de contraseña inválido o expirado");
+    }
+    
+    const hash = await bcrypt.hash(newPassword, 10);
+    user.password = hash;
+    user.resetToken = undefined; // Limpiar el token
+    user.resetTokenExp = undefined; // Limpiar la expiración del token
+    await user.save();
+    return { message: "Password reset successfully / Contraseña restablecida exitosamente" };
+  }
+
 }
 
 /**
