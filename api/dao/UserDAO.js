@@ -87,7 +87,8 @@ class UserDAO extends GlobalDAO {
   * @param {Object} param0 - { email }
   * @returns {Promise<string>} Message indicating recovery started.
   */
-  async recover({ email }) {
+  async recover({ data }) { // Recibe el objeto completo
+    const email = data.email; // Acceder a la propiedad email
     const user = await this.model.findOne({ email });
     if (!user) {
       // No revelar si el usuario existe o no por seguridad
