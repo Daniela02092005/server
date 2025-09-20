@@ -1,4 +1,3 @@
-import nodemailer from 'nodemailer';
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -17,22 +16,30 @@ const transporter = nodemailer.createTransport({
 * @returns {Promise<Object>} Información del envío del correo.
 */
 async function sendRecoveryEmail(to, token) {
-    const recoveryLink = `${process.env.FRONTEND_URL}/#/reset_password?token=${token}`; // URL del frontend para restablecer
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: to,
-        subject: 'Recuperación de Contraseña - SmartBilling',
-        html: `
-              <p>Has solicitado restablecer tu contraseña para CodeNova.</p>
-              <p>Haz clic en el siguiente enlace para restablecerla:</p>
-              <a href="${recoveryLink}">Restablecer Contraseña</a>
-              <p>Este enlace expirará en 1 hora.</p>
-              <p>Si no solicitaste esto, por favor ignora este correo.</p>
-            `,
-    };
-    
-    return transporter.sendMail(mailOptions);
+  const recoveryLink = `${process.env.FRONTEND_URL}/#/reset_password?token=${token}`;
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject: 'Recuperación de Contraseña - SmartBilling',
+    html: `
+      <p>Has solicitado restablecer tu contraseña para CodeNova.</p>
+      <p>Haz clic en el siguiente enlace para restablecerla:</p>
+      <a href="${recoveryLink}">Restablecer Contraseña</a>
+      <p>Este enlace expirará en 1 hora.</p>
+      <p>Si no solicitaste esto, por favor ignora este correo.</p>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Correo enviado:', info.response);
+    return info;
+  } catch (error) {
+    console.error('Error enviando correo:', error);
+    throw error; // para que el llamador sepa que falló
+  }
 }
+
 
 module.exports = { sendRecoveryEmail };
         
