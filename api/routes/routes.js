@@ -3,10 +3,6 @@
 const express = require("express");
 const router = express.Router();
 
-////agregado
-const auth = require('./path/to/authMiddleware'); // Ajusta la ruta a donde está tu función sendRecoveryEmail
-//Agregado
-
 
 // Import feature-specific route modules
 // Importar módulos de rutas específicas
@@ -46,21 +42,6 @@ router.use("/users", userRoutes);
  */
 router.use("/tasks", taskRoutes);
 
-//Agregado
-router.post('/test-send-email', auth, async (req, res) => {
-  const { to, token } = req.body;
-  if (!to || !token) {
-    return res.status(400).json({ error: 'Faltan parámetros to o token' });
-  }
-  try {
-    const info = await sendRecoveryEmail(to, token);
-    res.json({ message: 'Correo enviado', info });
-  } catch (error) {
-    console.error('Error enviando correo:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-//agregado
 
 
 
