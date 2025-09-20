@@ -1,8 +1,8 @@
 {
   "name": "to-do-list-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend for the CodeNova application",
+  "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
     "dev": "node --watch api/index.js"
@@ -19,5 +19,8 @@
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
     "nodemailer": "^7.0.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }
