@@ -3,6 +3,11 @@
 const express = require("express");
 const router = express.Router();
 
+////agregado
+const { sendRecoveryEmail } = require('./emailService'); // Ajusta la ruta a donde está tu función sendRecoveryEmail
+//Agregado
+
+
 // Import feature-specific route modules
 // Importar módulos de rutas específicas
 const authRoutes = require("./authRoutes");
@@ -40,6 +45,24 @@ router.use("/users", userRoutes);
  *   DELETE /tasks/:id
  */
 router.use("/tasks", taskRoutes);
+
+//Agregado
+app.post('/api/test-send-email', async (req, res) => {
+  const { to, token } = req.body;
+  if (!to || !token) {
+    return res.status(400).json({ error: 'Faltan parámetros to o token' });
+  }
+  try {
+    const info = await sendRecoveryEmail(to, token);
+    res.json({ message: 'Correo enviado', info });
+  } catch (error) {
+    console.error('Error enviando correo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+//agregado
+
+
 
 /**
  * Export main router instance
