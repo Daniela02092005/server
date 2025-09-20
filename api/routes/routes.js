@@ -4,7 +4,7 @@ const express = require("express");
 const router = express.Router();
 
 ////agregado
-const { sendRecoveryEmail } = require('../services/emailService'); // Ajusta la ruta a donde está tu función sendRecoveryEmail
+const auth = require('./path/to/authMiddleware'); // Ajusta la ruta a donde está tu función sendRecoveryEmail
 //Agregado
 
 
@@ -47,7 +47,7 @@ router.use("/users", userRoutes);
 router.use("/tasks", taskRoutes);
 
 //Agregado
-router.post('/test-send-email', async (req, res) => {
+router.post('/test-send-email', auth, async (req, res) => {
   const { to, token } = req.body;
   if (!to || !token) {
     return res.status(400).json({ error: 'Faltan parámetros to o token' });
