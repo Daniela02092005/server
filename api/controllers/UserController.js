@@ -76,23 +76,20 @@ class UserController extends GlobalController {
   async updateProfile(req, res) {
     try {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
-
       const updateData = { ...req.body };
       // Permitir la actualización de username, lastName y age
       const allowedUpdates = {};
       if (updateData.username) allowedUpdates.username = updateData.username;
       if (updateData.lastName) allowedUpdates.lastName = updateData.lastName; // Nuevo campo
       if (updateData.age) allowedUpdates.age = updateData.age;             // Nuevo campo
-
       // No permitir la actualización de password o email directamente a través de esta ruta
       delete allowedUpdates.password;
       delete allowedUpdates.email;
-
       if (Object.keys(allowedUpdates).length === 0) {
         return res.status(400).json({ message: "No valid fields to update." });
       }
-
       const updatedUser = await UserDAO.update(req.userId, allowedUpdates);
+      // Devolver el usuario actualizado con los campos correctos
       res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -112,10 +109,17 @@ class UserController extends GlobalController {
       const user = await UserDAO.model
         .findById(userId)
         .select("-password -resetToken -resetTokenExp"); // Excluir campos sensibles
-
       if (!user) return res.status(404).json({ message: "User not found" });
-
-      res.status(200).json(user);
+      // Asegurarse de que los campos lastName y age se incluyan en la respuesta
+      res.status(200).json({
+        _id: user._id,
+        username: user.username,
+        lastName: user.lastName,
+        age: user.age,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      });
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
