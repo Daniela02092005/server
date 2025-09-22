@@ -25,7 +25,9 @@ class UserController extends GlobalController {
    */
   async register(req, res) {
     try {
-      const user = await UserDAO.register(req.body);
+      // Asegurarse de pasar todos los campos necesarios al DAO
+      const { username, lastName, age, email, password } = req.body;
+      const user = await UserDAO.register({ username, lastName, age, email, password });
       res.status(201).json(user);
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -59,8 +61,9 @@ class UserController extends GlobalController {
    */
   async recover(req, res) {
     try {
-      const token = await UserDAO.recover(req.body);
-      res.json({ message: "Recovery started", token });
+      // Pasar directamente req.body.email al DAO
+      const message = await UserDAO.recover({ email: req.body.email });
+      res.json({ message });
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
@@ -75,11 +78,21 @@ class UserController extends GlobalController {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
 
       const updateData = { ...req.body };
-      // Prevent sensitive fields from being updated directly / Evitar actualización directa de campos sensibles
-      delete updateData.password;
-      delete updateData.email;
+      // Permitir la actualización de username, lastName y age
+      const allowedUpdates = {};
+      if (updateData.username) allowedUpdates.username = updateData.username;
+      if (updateData.lastName) allowedUpdates.lastName = updateData.lastName; // Nuevo campo
+      if (updateData.age) allowedUpdates.age = updateData.age;             // Nuevo campo
 
-      const updatedUser = await UserDAO.update(req.userId, updateData);
+      // No permitir la actualización de password o email directamente a través de esta ruta
+      delete allowedUpdates.password;
+      delete allowedUpdates.email;
+
+      if (Object.keys(allowedUpdates).length === 0) {
+        return res.status(400).json({ message: "No valid fields to update." });
+      }
+
+      const updatedUser = await UserDAO.update(req.userId, allowedUpdates);
       res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -121,7 +134,7 @@ class UserController extends GlobalController {
       res.status(400).json({ message: err.message });
     }
   }
-  
+
 }
 
 /**
