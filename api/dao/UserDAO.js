@@ -6,7 +6,7 @@ const crypto = require("crypto");
 const GlobalDAO = require("./GlobalDAO");
 const User = require("../models/User");
 // Importar el servicio de correo
-const { sendRecoveryEmail } = require("../services/emailService"); 
+const { sendRecoveryEmail, sendPasswordByEmail } = require("../services/emailService"); // Importar nueva función
 
 /**
  * Data Access Object (DAO) for the User model.
@@ -38,19 +38,21 @@ class UserDAO extends GlobalDAO {
    * Register a new user with hashed password.
    * Registrar un nuevo usuario con contraseña encriptada.
    *
-   * @param {Object} param0 - { username, email, password }
+   * @param {Object} param0 - { username, lastName, age, email, password }
    * @returns {Promise<Object>} Newly created user (without sensitive data).
    */
-  async register({ username, email, password }) {
+  async register({ username, lastName, age, email, password }) { // Añadir lastName y age
     const exists = await this.model.findOne({ email });
     if (exists) throw new Error("Email already registered / Correo ya registrado");
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await this.create({ username, email, password: hash });
+    const user = await this.create({ username, lastName, age, email, password: hash }); // Guardar nuevos campos
 
     return {
       id: user._id,
       username: user.username,
+      lastName: user.lastName, // Incluir en la respuesta
+      age: user.age,           // Incluir en la respuesta
       email: user.email,
       createdAt: user.createdAt,
     };
@@ -76,7 +78,7 @@ class UserDAO extends GlobalDAO {
 
     return {
       token,
-      user: { id: user._id, username: user.username, email: user.email },
+      user: { id: user._id, username: user.username, lastName: user.lastName, age: user.age, email: user.email }, // Incluir nuevos campos
     };
   }
 
@@ -84,30 +86,51 @@ class UserDAO extends GlobalDAO {
   * Generate a password recovery token and send email.
   * Generar un token para recuperación de contraseña y enviar correo.
   *
-  * @param {Object} param0 - { email }
+  * @param {Object} data - { email }
   * @returns {Promise<string>} Message indicating recovery started.
   */
-  async recover({ data }) { // Recibe el objeto completo
-    const email = data.email; // Acceder a la propiedad email
+  async recover({ email }) { // Recibe directamente el email
     const user = await this.model.findOne({ email });
+
     if (!user) {
-      // No revelar si el usuario existe o no por seguridad
-      console.log(`Intento de recuperación de contraseña para correo no registrado: ${email}`);
-      throw new Error("If the email exists, a recovery link has been sent / Si el correo existe, se ha enviado un enlace de recuperación");
+      throw new Error("User with this email does not exist."); // Mensaje explícito
     }
 
-    const token = crypto.randomBytes(32).toString("hex"); // Token más largo para mayor seguridad
-    user.resetToken = token;
-    user.resetTokenExp = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    // **Opción 2 (Generar una nueva contraseña temporal y enviarla - Menos insegura que la 1, pero no es "la del usuario"):**
+    const newTempPassword = crypto.randomBytes(8).toString('hex'); // Generar una nueva contraseña temporal
+    user.password = await bcrypt.hash(newTempPassword, 10); // Hashear y guardar la nueva contraseña
+    user.resetToken = undefined; // Limpiar tokens de reset si existieran
+    user.resetTokenExp = undefined;
     await user.save();
-    
-    // Enviar el correo electrónico
+    await sendPasswordByEmail(user.email, newTempPassword); // Enviar la nueva contraseña temporal
+    return "A new temporary password has been sent to your email."; // Mensaje actualizado
+
+  }
+
+  /**
+   * Update a user's profile.
+   * Actualizar el perfil de un usuario.
+   *
+   * @param {string} id - User ID.
+   * @param {Object} updateData - Data to update.
+   * @returns {Promise<Object>} Updated user.
+   */
+  async update(id, updateData) {
     try {
-      await sendRecoveryEmail(user.email, token);
-      return "Recovery email sent / Correo de recuperación enviado";
-    } catch (emailError) {
-      console.error("Error sending recovery email:", emailError);
-      throw new Error("Error sending recovery email / Error al enviar correo de recuperación");
+      // Asegurarse de que la contraseña se hashee si se está actualizando
+      if (updateData.password) {
+        updateData.password = await bcrypt.hash(updateData.password, 10);
+      }
+      const updated = await this.model.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true, runValidators: true }
+      ).select("-password -resetToken -resetTokenExp"); // Excluir campos sensibles de la respuesta
+      if (!updated) throw new Error("User not found / Usuario no encontrado");
+      return updated;
+    } catch (error) {
+      throw new Error(`Error updating user / Error actualizando usuario: ${error.message}`);
     }
   }
 
@@ -127,7 +150,7 @@ class UserDAO extends GlobalDAO {
     if (!user) {
       throw new Error("Invalid or expired password reset token / Token de restablecimiento de contraseña inválido o expirado");
     }
-    
+
     const hash = await bcrypt.hash(newPassword, 10);
     user.password = hash;
     user.resetToken = undefined; // Limpiar el token
@@ -148,4 +171,3 @@ class UserDAO extends GlobalDAO {
  * evitando instanciaciones redundantes.
  */
 module.exports = new UserDAO();
-
