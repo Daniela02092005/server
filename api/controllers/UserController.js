@@ -111,7 +111,7 @@ class UserController extends GlobalController {
       const userId = req.userId;
       const user = await UserDAO.model
         .findById(userId)
-        .select("-password -resetToken -resetTokenExp"); // Exclude sensitive fields / Excluir campos sensibles
+        .select("-password -resetToken -resetTokenExp"); // Excluir campos sensibles
 
       if (!user) return res.status(404).json({ message: "User not found" });
 
