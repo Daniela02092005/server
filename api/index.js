@@ -21,38 +21,13 @@ const app = express();
  *
  * - Parse URL-encoded request bodies
  *   Procesa cuerpos de solicitud codificados en URL
+ *
+ * - Enable Cross-Origin Resource Sharing (CORS)
+ *   Habilita solicitudes entre orígenes distintos
  */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-/**
- * CORS configuration
- * Configuración de CORS
- *
- * Allows requests only from trusted origins
- * Permite solicitudes solo desde orígenes de confianza
- */
-const allowedOrigins = [
-  process.env.FRONTEND_URL || "https://client-theta-bay.vercel.app",
-  "http://localhost:10000",
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Allow requests without origin (e.g., Postman)
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true); // Accept allowed origins / Aceptar orígenes permitidos
-    } else {
-      callback(new Error("Not allowed by CORS / No permitido por CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods / Métodos HTTP permitidos
-  allowedHeaders: ["Content-Type", "Authorization"], // Headers allowed / Encabezados permitidos
-  credentials: true, // Allow cookies and credentials / Permitir cookies y credenciales
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 /**
  * Initialize database connection
