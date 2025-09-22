@@ -44,10 +44,8 @@ class UserDAO extends GlobalDAO {
   async register({ username, lastName, age, email, password }) { // Añadir lastName y age
     const exists = await this.model.findOne({ email });
     if (exists) throw new Error("Email already registered / Correo ya registrado");
-
     const hash = await bcrypt.hash(password, 10);
     const user = await this.create({ username, lastName, age, email, password: hash }); // Guardar nuevos campos
-
     return {
       id: user._id,
       username: user.username,
@@ -68,14 +66,11 @@ class UserDAO extends GlobalDAO {
   async login({ email, password }) {
     const user = await this.model.findOne({ email });
     if (!user) throw new Error("Invalid credentials / Credenciales inválidas");
-
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) throw new Error("Invalid credentials / Credenciales inválidas");
-
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-
     return {
       token,
       user: { id: user._id, username: user.username, lastName: user.lastName, age: user.age, email: user.email }, // Incluir nuevos campos
