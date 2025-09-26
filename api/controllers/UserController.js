@@ -83,22 +83,37 @@ class UserController extends GlobalController {
    */
   async getProfile(req, res) {
     try {
+      console.log("📱 GET Profile called - User ID:", req.userId);
+      console.log("📱 Headers:", req.headers);
+
       const userId = req.userId;
+      if (!userId) {
+        console.log("❌ No user ID in request");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       const user = await UserDAO.model
         .findById(userId)
         .select("-password -resetToken -resetTokenExp");
-      if (!user) return res.status(404).json({ message: "User not found" });
-      
+
+      if (!user) {
+        console.log("❌ User not found in database");
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log("✅ User found:", user.email);
+
       res.status(200).json({
         _id: user._id,
         username: user.username,
-        lastName: user.lastName, 
-        age: user.age,           
+        lastName: user.lastName,
+        age: user.age,
         email: user.email,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       });
     } catch (err) {
+      console.error("❌ Error in getProfile:", err.message);
       res.status(500).json({ message: err.message });
     }
   }
