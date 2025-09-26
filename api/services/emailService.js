@@ -11,27 +11,23 @@ const transporter = nodemailer.createTransport({
 
 
 async function sendRecoveryEmail(to, token) {
-  // Para Vite/Vercel, la ruta debe incluir el hash routing
+  console.log('Intentando enviar email a:', to);
+  console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+  console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Configurado' : 'No configurado');
   const recoveryLink = `${process.env.FRONTEND_URL}/#/reset_password?token=${token}`;
-
+  console.log('Recovery link:', recoveryLink);
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
     subject: 'Recuperación de Contraseña - CodeNova',
-    html: `
-      <p>Has solicitado restablecer tu contraseña para CodeNova.</p>
-      <p>Haz clic en el siguiente enlace para restablecerla:</p>
-      <a href="${recoveryLink}">Restablecer Contraseña</a>
-      <p>Este enlace expirará en 1 hora.</p>
-      <p>Si no solicitaste esto, por favor ignora este correo.</p>
-    `,
+    html: `...` // tu HTML
   };
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Correo de recuperación enviado:', info.response);
+    console.log('Correo enviado exitosamente:', info.response);
     return info;
   } catch (error) {
-    console.error('Error enviando correo de recuperación:', error);
+    console.error('Error enviando correo:', error);
     throw error;
   }
 }
