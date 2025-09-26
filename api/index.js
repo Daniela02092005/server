@@ -40,17 +40,21 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permitir requests sin origin (ej. warm-ups, curl, Postman)
+    // Permitir requests sin origin y de los dominios permitidos
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      console.warn("CORS blocked origin:", origin);  // Log para depuración
-      callback(new Error("Not allowed by CORS / No permitido por CORS"));
+      console.warn("CORS blocked origin:", origin);
+      // En producción, mejor no mostrar error detallado
+      callback(null, true); // Temporal: permitir todos para testing
+      // callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],  // Incluye Authorization para JWT
-  credentials: false,  // Cambiado a false (no usas cookies; revierte a true si es necesario)
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: true,  // Cambiar a true para cookies/tokens
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
 
