@@ -76,14 +76,24 @@ class UserDAO extends GlobalDAO {
     if (!user) {
       throw new Error("User with this email does not exist.");
     }
-    // Generar un token de recuperación único
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    // Establecer una fecha de expiración (ej. 1 hora)
-    const resetTokenExp = Date.now() + 3600000; // 1 hora en milisegundos
+
+    // Generar token JWT en lugar de crypto random
+    const resetToken = jwt.sign(
+      {
+        id: user._id,
+        type: 'recovery',
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // Guardar token y expiración
     user.resetToken = resetToken;
-    user.resetTokenExp = resetTokenExp;
+    user.resetTokenExp = Date.now() + 3600000; // 1 hora
     await user.save();
-    // Enviar el correo con el enlace de recuperación
+
+    // Enviar el correo con el token JWT
     await sendRecoveryEmail(user.email, resetToken);
     return "Password recovery email sent / Correo de recuperación de contraseña enviado.";
   }
@@ -120,21 +130,41 @@ class UserDAO extends GlobalDAO {
   * @returns {Promise<Object>} The updated user.
   */
   async resetPassword(token, newPassword) {
-    const user = await this.model.findOne({
-      resetToken: token,
-      resetTokenExp: { $gt: Date.now() }, // Token no expirado
-    });
-    if (!user) {
-      throw new Error("Invalid or expired password reset token / Token de restablecimiento de contraseña inválido o expirado");
-    }
-    const hash = await bcrypt.hash(newPassword, 10);
-    user.password = hash;
-    user.resetToken = undefined;
-    user.resetTokenExp = undefined;
-    await user.save();
-    return { message: "Password reset successfully / Contraseña restablecida exitosamente" };
-  }
+    try {
+      // Primero verificar el JWT
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.type !== 'recovery') {
+        throw new Error("Invalid token type");
+      }
 
+      // Luego buscar en la base de datos
+      const user = await this.model.findOne({
+        resetToken: token,
+        resetTokenExp: { $gt: Date.now() },
+        _id: decoded.id // Verificar que coincida el ID
+      });
+
+      if (!user) {
+        throw new Error("Invalid or expired password reset token");
+      }
+
+      const hash = await bcrypt.hash(newPassword, 10);
+      user.password = hash;
+      user.resetToken = undefined;
+      user.resetTokenExp = undefined;
+      await user.save();
+
+      return { message: "Password reset successfully" };
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new Error("Token expired");
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw new Error("Invalid token");
+      }
+      throw new Error(error.message);
+    }
+  }
 }
 
 /**
