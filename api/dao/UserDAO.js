@@ -74,10 +74,12 @@ class UserDAO extends GlobalDAO {
   async recover({ email }) {
     const user = await this.model.findOne({ email });
     if (!user) {
-      throw new Error("User with this email does not exist.");
+      // Por seguridad, no revelar que el email no existe
+      console.log("Recovery requested for non-existent email:", email);
+      return "If the email exists, a recovery link will be sent.";
     }
 
-    // Generar token JWT en lugar de crypto random
+    // Generar token JWT
     const resetToken = jwt.sign(
       {
         id: user._id,
@@ -88,14 +90,18 @@ class UserDAO extends GlobalDAO {
       { expiresIn: '1h' }
     );
 
-    // Guardar token y expiración
+    // Guardar en la base de datos
     user.resetToken = resetToken;
     user.resetTokenExp = Date.now() + 3600000; // 1 hora
-    await user.save();
 
-    // Enviar el correo con el token JWT
-    await sendRecoveryEmail(user.email, resetToken);
-    return "Password recovery email sent / Correo de recuperación de contraseña enviado.";
+    try {
+      await user.save();
+      await sendRecoveryEmail(user.email, resetToken);
+      return "Password recovery email sent";
+    } catch (error) {
+      console.error("Error saving reset token:", error);
+      throw new Error("Error processing recovery request");
+    }
   }
 
   /**
