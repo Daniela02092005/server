@@ -1,8 +1,6 @@
 /**
  * Main server entry point
- * Punto de entrada principal del servidor
  */
-
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
@@ -15,22 +13,24 @@ const app = express();
 /**
  * Middleware configuration
  * Configuración de middlewares
- *
- * - Parse JSON request bodies
- *   Procesa cuerpos de solicitud en formato JSON
- *
- * - Parse URL-encoded request bodies
- *   Procesa cuerpos de solicitud codificados en URL
  */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// RUTA DE HEALTH CHECK: SIEMPRE PRIMERO (no depende de DB, para warm-ups y monitoreo)
+app.get("/api/v1/health", (req, res) => {
+  console.log("Health check accessed at:", new Date().toISOString()); // Log para Render
+  res.status(200).json({ 
+    status: "OK", 
+    message: "Server is alive and ready (DB connection pending if first start)",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0"
+  });
+});
+
 /**
  * CORS configuration
  * Configuración de CORS
- *
- * Allows requests only from trusted origins
- * Permite solicitudes solo desde orígenes de confianza
  */
 const allowedOrigins = [
   process.env.FRONTEND_URL || "https://client-theta-bay.vercel.app",
@@ -38,82 +38,57 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) {
-      // Allow requests without origin (e.g., Postman)
+    if (!origin || allowedOrigins.includes(origin)) {  // Permitir sin origin para warm-ups/curl
       return callback(null, true);
-    }
-    if (allowedOrigins.includes(origin)) {
-      // Accept allowed origins / Aceptar orígenes permitidos
-      callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS / No permitido por CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods / Métodos HTTP permitidos
-  allowedHeaders: ["Content-Type", "Authorization"], // Headers allowed / Encabezados permitidos
-  credentials: true, // Allow cookies and credentials / Permitir cookies y credenciales
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
 /**
- * Initialize database connection
- * Inicializar conexión a la base de datos
- *
- * Exits the process if the connection fails
- * Finaliza el proceso si la conexión falla
- */
-connectDB();
-
-// Ruta de health check simple (pública y rápida)
-app.get("/api/v1/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
-    message: "Server is alive and ready",
-    timestamp: new Date().toISOString(),
-    version: "1.0.0"  // Opcional: agrega info útil si quieres
-  });
-});
-
-
-/**
- * Mount the API routes under /api/v1
- * Montar las rutas de la API bajo /api/v1
- *
- * Example / Ejemplo:
- *   /api/v1/auth
- *   /api/v1/users
- *   /api/v1/tasks
- */
-app.use("/api/v1", routes);
-
-/**
- * Health check endpoint
- * Endpoint de verificación del servidor
- *
- * Useful to verify that the server is up and running
- * Útil para verificar que el servidor está en ejecución
- */
-app.get("/", (req, res) => res.send("Server is running / Servidor en ejecución"));
-
-/**
  * Start the server only if this file is run directly
  * Iniciar el servidor solo si este archivo se ejecuta directamente
- *
- * Prevents multiple servers when testing with imports
- * Previene múltiples servidores al realizar pruebas con imports
  */
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  const startServer = async () => {
+    const PORT = process.env.PORT || 3000;
+
+    try {
+      // ESPERAR CONEXIÓN A DB ANTES DE RUTAS Y LISTEN
+      await connectDB();  // Ahora await: Bloquea hasta éxito o exit(1)
+      
+      // UNA VEZ CONECTADA LA DB, REGISTRAR RUTAS DEPENDIENTES
+      app.use("/api/v1", routes);  // MOVIDO AQUÍ: Solo si DB OK
+
+      // Health check en raíz (opcional, después de DB para full status)
+      app.get("/", (req, res) => {
+        res.json({ 
+          message: "Server is running with DB connected / Servidor en ejecución con DB conectada",
+          dbStatus: "Connected"
+        });
+      });
+
+      // INICIAR SERVIDOR SOLO SI TODO OK
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+        console.log("Full server ready: DB connected and routes mounted");
+      });
+    } catch (error) {
+      // connectDB ya maneja exit(1) en su catch, pero esto es backup
+      console.error("Failed to start server:", error);
+      process.exit(1);
+    }
+  };
+
+  startServer();  // Llamar la función async
 }
 
 /**
- * Export the app instance
- * Exportar la instancia de la aplicación
- *
- * Useful for testing or importing into other modules
- * Útil para pruebas o importaciones en otros módulos
+ * Export the app instance (para testing, sin DB wait)
  */
 module.exports = app;
