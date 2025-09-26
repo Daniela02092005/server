@@ -64,6 +64,17 @@ app.use(cors(corsOptions));
  */
 connectDB();
 
+// Ruta de health check simple (pública y rápida)
+app.get("/api/v1/health", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    message: "Server is alive and ready",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0"  // Opcional: agrega info útil si quieres
+  });
+});
+
+
 /**
  * Mount the API routes under /api/v1
  * Montar las rutas de la API bajo /api/v1

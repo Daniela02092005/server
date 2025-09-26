@@ -1,34 +1,24 @@
-//creemos la clase que hereda a GlobalDAO y importa el modelo del User
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+const crypto = require("crypto"); 
 
 const GlobalDAO = require("./GlobalDAO");
 const User = require("../models/User");
-// Importar el servicio de correo
-const { sendRecoveryEmail, sendPasswordByEmail } = require("../services/emailService"); // Importar nueva función
-
+const { sendRecoveryEmail } = require("../services/emailService"); 
 /**
  * Data Access Object (DAO) for the User model.
- * DAO de Acceso a Datos para el modelo de Usuario.
  *
  * Extends the generic {@link GlobalDAO} class to provide
  * database operations (create, read, update, delete, getAll)
  * specifically for User documents.
- *
- * Extiende la clase genérica {@link GlobalDAO} para proporcionar
- * operaciones de base de datos específicamente para documentos de Usuario.
  */
 class UserDAO extends GlobalDAO {
   /**
    * Create a new UserDAO instance.
-   * Crear una nueva instancia de UserDAO.
    *
    * Passes the User Mongoose model to the parent class so that
    * all inherited CRUD methods operate on the User collection.
    *
-   * Pasa el modelo de Mongoose `User` a la clase padre para que
-   * todos los métodos CRUD heredados operen sobre la colección User.
    */
   constructor() {
     super(User);
@@ -36,21 +26,20 @@ class UserDAO extends GlobalDAO {
 
   /**
    * Register a new user with hashed password.
-   * Registrar un nuevo usuario con contraseña encriptada.
    *
    * @param {Object} param0 - { username, lastName, age, email, password }
    * @returns {Promise<Object>} Newly created user (without sensitive data).
    */
-  async register({ username, lastName, age, email, password }) { // Añadir lastName y age
+  async register({ username, lastName, age, email, password }) {
     const exists = await this.model.findOne({ email });
     if (exists) throw new Error("Email already registered / Correo ya registrado");
     const hash = await bcrypt.hash(password, 10);
-    const user = await this.create({ username, lastName, age, email, password: hash }); // Guardar nuevos campos
+    const user = await this.create({ username, lastName, age, email, password: hash });
     return {
       id: user._id,
       username: user.username,
-      lastName: user.lastName, // Incluir en la respuesta
-      age: user.age,           // Incluir en la respuesta
+      lastName: user.lastName,
+      age: user.age,
       email: user.email,
       createdAt: user.createdAt,
     };
@@ -58,7 +47,6 @@ class UserDAO extends GlobalDAO {
 
   /**
    * Authenticate a user and return JWT token.
-   * Autenticar un usuario y devolver un token JWT.
    *
    * @param {Object} param0 - { email, password }
    * @returns {Promise<Object>} { token, user }
@@ -73,39 +61,35 @@ class UserDAO extends GlobalDAO {
     });
     return {
       token,
-      user: { id: user._id, username: user.username, lastName: user.lastName, age: user.age, email: user.email }, // Incluir nuevos campos
+      user: { id: user._id, username: user.username, lastName: user.lastName, age: user.age, email: user.email },
     };
   }
 
   /**
   * Generate a password recovery token and send email.
-  * Generar un token para recuperación de contraseña y enviar correo.
   *
   * @param {Object} data - { email }
   * @returns {Promise<string>} Message indicating recovery started.
   */
-  async recover({ email }) { // Recibe directamente el email
+  async recover({ email }) {
     const user = await this.model.findOne({ email });
-
     if (!user) {
-      throw new Error("User with this email does not exist."); // Mensaje explícito
+      throw new Error("User with this email does not exist.");
     }
-
-
-    // **Opción 2 (Generar una nueva contraseña temporal y enviarla - Menos insegura que la 1, pero no es "la del usuario"):**
-    const newTempPassword = crypto.randomBytes(8).toString('hex'); // Generar una nueva contraseña temporal
-    user.password = await bcrypt.hash(newTempPassword, 10); // Hashear y guardar la nueva contraseña
-    user.resetToken = undefined; // Limpiar tokens de reset si existieran
-    user.resetTokenExp = undefined;
+    // Generar un token de recuperación único
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    // Establecer una fecha de expiración (ej. 1 hora)
+    const resetTokenExp = Date.now() + 3600000; // 1 hora en milisegundos
+    user.resetToken = resetToken;
+    user.resetTokenExp = resetTokenExp;
     await user.save();
-    await sendPasswordByEmail(user.email, newTempPassword); // Enviar la nueva contraseña temporal
-    return "A new temporary password has been sent to your email."; // Mensaje actualizado
-
+    // Enviar el correo con el enlace de recuperación
+    await sendRecoveryEmail(user.email, resetToken);
+    return "Password recovery email sent / Correo de recuperación de contraseña enviado.";
   }
 
   /**
    * Update a user's profile.
-   * Actualizar el perfil de un usuario.
    *
    * @param {string} id - User ID.
    * @param {Object} updateData - Data to update.
@@ -113,7 +97,6 @@ class UserDAO extends GlobalDAO {
    */
   async update(id, updateData) {
     try {
-      // Asegurarse de que la contraseña se hashee si se está actualizando
       if (updateData.password) {
         updateData.password = await bcrypt.hash(updateData.password, 10);
       }
@@ -121,7 +104,7 @@ class UserDAO extends GlobalDAO {
         id,
         updateData,
         { new: true, runValidators: true }
-      ).select("-password -resetToken -resetTokenExp"); // Excluir campos sensibles de la respuesta
+      ).select("-password -resetToken -resetTokenExp");
       if (!updated) throw new Error("User not found / Usuario no encontrado");
       return updated;
     } catch (error) {
@@ -131,7 +114,6 @@ class UserDAO extends GlobalDAO {
 
   /**
   * Reset user password using a recovery token.
-  * Restablecer la contraseña del usuario usando un token de recuperación.
   *
   * @param {string} token - The recovery token.
   * @param {string} newPassword - The new password.
@@ -145,11 +127,10 @@ class UserDAO extends GlobalDAO {
     if (!user) {
       throw new Error("Invalid or expired password reset token / Token de restablecimiento de contraseña inválido o expirado");
     }
-
     const hash = await bcrypt.hash(newPassword, 10);
     user.password = hash;
-    user.resetToken = undefined; // Limpiar el token
-    user.resetTokenExp = undefined; // Limpiar la expiración del token
+    user.resetToken = undefined;
+    user.resetTokenExp = undefined;
     await user.save();
     return { message: "Password reset successfully / Contraseña restablecida exitosamente" };
   }
@@ -158,11 +139,8 @@ class UserDAO extends GlobalDAO {
 
 /**
  * Export a singleton instance of UserDAO.
- * Exportar una instancia única de UserDAO.
  *
  * This ensures the same DAO instance is reused across the app,
  * avoiding redundant instantiations.
- * Esto asegura que la misma instancia sea reutilizada en toda la app,
- * evitando instanciaciones redundantes.
  */
 module.exports = new UserDAO();
