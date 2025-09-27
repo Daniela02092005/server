@@ -11,19 +11,13 @@ const auth = require("../middlewares/auth");
  * 
  * Ruta final: GET /api/v1/users/profile
  */
-router.get("/profile", auth, (req, res) => {
-  console.log("🔍 GET /users/profile route hit");
-  UserController.getProfile(req, res);
-});
+router.get("/profile", auth, (req, res) => UserController.getProfile(req, res));
 /**
  * Update user profile
  * Actualizar perfil de usuario
  * 
  * Ruta final: PUT /api/v1/users/profile
  */
-router.put("/profile", auth, (req, res) => {
-  console.log("🔍 PUT /users/profile route hit");
-  UserController.updateProfile(req, res);
-});
+router.put("/profile", auth, (req, res) => UserController.updateProfile(req, res));
 
 module.exports = router;
