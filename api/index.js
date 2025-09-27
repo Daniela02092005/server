@@ -38,11 +38,14 @@ const allowedOrigins = [
 ].filter(Boolean); // Filtrar valores undefined/null para producción limpia
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+  origin: function (origin, callback) {   
+    const originBase = origin ? new URL(origin).origin : null;
+    console.log("🔍 Incoming origin:", originBase || "No origin"); // Log temporal para debug
+
+    if (!originBase || allowedOrigins.includes(originBase)) {
       callback(null, true);
     } else {
-      console.warn("CORS blocked origin:", origin);
+      console.warn("CORS blocked origin:", originBase);
       callback(new Error("Not allowed by CORS"));
     }
   },
