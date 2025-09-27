@@ -21,10 +21,10 @@ router.post("/logout", (req, res) => UserController.logout(req, res));
  * Recover account (start password reset process)
  */
 router.post("/recover", (req, res) => UserController.recover(req, res));
-/**
- * Get profile of authenticated user
- * router.get("/profile", authMiddleware, (req, res) => UserController.getProfile(req, res));
- */
+
+router.get("/profile", authMiddleware, (req, res) => UserController.getProfile(req, res));
+
+router.put("/profile", authMiddleware, (req, res) => UserController.updateProfile(req, res));
 
 /**
 * Reset user password
