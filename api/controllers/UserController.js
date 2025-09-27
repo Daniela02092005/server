@@ -62,16 +62,17 @@ class UserController extends GlobalController {
       delete allowedUpdates.email;
 
       if (Object.keys(allowedUpdates).length === 0) {
-        return res.status(400).json({ message: "No valid fields to update." });
+        return res.status(400).json({ message: "No valid fields to update. Provide username, lastName, or age." });
       }
 
-      const updatedUser = await UserDAO.update(req.userId, allowedUpdates);
+      const updatedUser  = await UserDAO.update(req.userId, allowedUpdates);
 
       res.status(200).json({
         message: "Profile updated successfully",
-        user: updatedUser,
+        user: updatedUser ,
       });
     } catch (err) {
+      console.error("Error in updateProfile:", err); // Logging para debug
       res.status(400).json({ message: err.message });
     }
   }
@@ -81,6 +82,7 @@ class UserController extends GlobalController {
    */
   async getProfile(req, res) {
     try {
+      console.log("getProfile called with userId:", req.userId); // Logging para debug 404
       const userId = req.userId;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
@@ -88,7 +90,10 @@ class UserController extends GlobalController {
         .findById(userId)
         .select("-password -resetPasswordToken -resetPasswordExpires");
 
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        console.log("User  not found for ID:", userId); // Logging para debug
+        return res.status(404).json({ message: "User  not found" });
+      }
 
       res.status(200).json({
         _id: user._id,
@@ -114,9 +119,8 @@ class UserController extends GlobalController {
 
       const user = await UserDAO.model.findOne({ email });
       if (!user) {
-        return res
-          .status(200)
-          .json({ message: "Si existe el email te enviaremos instrucciones" });
+        // Por seguridad, no revelar si el email existe
+        return res.status(200).json({ message: "Si el email existe, te enviaremos instrucciones" });
       }
 
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -130,7 +134,7 @@ class UserController extends GlobalController {
       res.json({ message: "Email de recuperación enviado" });
     } catch (err) {
       console.error("forgotPassword error:", err);
-      res.status(500).json({ message: "Error interno" });
+      res.status(500).json({ message: "Error interno al enviar email" });
     }
   }
   /**
@@ -140,7 +144,7 @@ class UserController extends GlobalController {
     try {
       const { token, email, password } = req.body;
       if (!token || !email || !password)
-        return res.status(400).json({ message: "Faltan datos" });
+        return res.status(400).json({ message: "Faltan datos: token, email y password" });
 
       const hashed = crypto.createHash("sha256").update(token).digest("hex");
 
