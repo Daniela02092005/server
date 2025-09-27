@@ -21,8 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 // RUTA DE HEALTH CHECK: SIEMPRE PRIMERO (no depende de DB, para warm-ups y monitoreo)
 app.get("/api/v1/health", (req, res) => {
   console.log("Health check accessed at:", new Date().toISOString()); // Log para Render
-  res.status(200).json({ 
-    status: "OK", 
+  res.status(200).json({
+    status: "OK",
     message: "Server is alive and ready (DB connection pending if first start)",
     timestamp: new Date().toISOString(),
     version: "1.0.0"
@@ -34,10 +34,8 @@ app.get("/api/v1/health", (req, res) => {
  * Configuración de CORS
  */
 const allowedOrigins = [
-  process.env.FRONTEND_URL, 
-  "http://localhost:5173",  
-  "http://localhost:3000"   
-];
+  process.env.FRONTEND_URL,  // https://client-theta-bay.vercel.app
+].filter(Boolean); // Filtrar valores undefined/null para producción limpia
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -66,7 +64,7 @@ if (require.main === module) {
     try {
       // ESPERAR CONEXIÓN A DB ANTES DE RUTAS Y LISTEN
       await connectDB();  // Ahora await: Bloquea hasta éxito o exit(1)
-      
+
       // UNA VEZ CONECTADA LA DB, REGISTRAR RUTAS DEPENDIENTES
       app.use("/api/v1", routes);  // MOVIDO AQUÍ: Solo si DB OK
 
@@ -103,7 +101,7 @@ if (require.main === module) {
           availableRoutes: {
             auth: [
               "POST /api/v1/auth/register",
-              "POST /api/v1/auth/login", 
+              "POST /api/v1/auth/login",
               "POST /api/v1/auth/recover",
               "POST /api/v1/auth/reset-password"
             ],
@@ -113,7 +111,7 @@ if (require.main === module) {
             ],
             tasks: [
               "GET /api/v1/tasks",
-              "POST /api/v1/tasks", 
+              "POST /api/v1/tasks",
               "GET /api/v1/tasks/:id",
               "PUT /api/v1/tasks/:id",
               "DELETE /api/v1/tasks/:id"
@@ -137,7 +135,7 @@ if (require.main === module) {
 
       // Health check en raíz (opcional, después de DB para full status)
       app.get("/", (req, res) => {
-        res.json({ 
+        res.json({
           message: "Server is running with DB connected / Servidor en ejecución con DB conectada",
           dbStatus: "Connected",
           timestamp: new Date().toISOString(),
@@ -156,7 +154,7 @@ if (require.main === module) {
 
       // INICIAR SERVIDOR SOLO SI TODO OK
       app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`🚀 Server running on port ${PORT} (accessible via Render URL)`);
         console.log("✅ Full server ready: DB connected and routes mounted");
         console.log("🌐 Frontend URL:", process.env.FRONTEND_URL || "https://client-theta-bay.vercel.app");
         console.log("🔧 Debug routes available:");
@@ -169,7 +167,7 @@ if (require.main === module) {
     }
   };
 
-  startServer();  
+  startServer();
 }
 
 /**
