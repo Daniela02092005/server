@@ -34,27 +34,23 @@ app.get("/api/v1/health", (req, res) => {
  * Configuración de CORS
  */
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "https://client-theta-bay.vercel.app",
-  "http://localhost:5173",  // Para desarrollo local (Vite default port)
-  "http://localhost:3000"   // Opcional: si pruebas frontend en otro puerto
+  process.env.FRONTEND_URL, 
+  "http://localhost:5173",  
+  "http://localhost:3000"   
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permitir requests sin origin y de los dominios permitidos
     if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
+      callback(null, true);
     } else {
       console.warn("CORS blocked origin:", origin);
-      // En producción, mejor no mostrar error detallado
-      callback(null, true); // Temporal: permitir todos para testing
-      // callback(new Error("Not allowed by CORS"));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  credentials: true,  // Cambiar a true para cookies/tokens
-  preflightContinue: false,
+  credentials: true,
   optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
