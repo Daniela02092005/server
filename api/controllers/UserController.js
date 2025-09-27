@@ -1,5 +1,9 @@
 const GlobalController = require("./GlobalController");
 const UserDAO = require("../dao/UserDAO");
+const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
+const User = require("../models/User");
+const { sendRecoveryEmail } = require("../services/emailService");
 
 /**
  * Controller class for managing User resources and authentication.
@@ -42,17 +46,6 @@ class UserController extends GlobalController {
     res.json({ message: "Logout successful" });
   }
   /**
-   * Handle user account recovery.
-   */
-  async recover(req, res) {
-    try {
-      const message = await UserDAO.recover({ email: req.body.email });
-      res.json({ message });
-    } catch (err) {
-      res.status(400).json({ message: err.message });
-    }
-  }
-  /**
    * Update user profile (excluding password and email by default).
    */
   async updateProfile(req, res) {
@@ -61,47 +54,41 @@ class UserController extends GlobalController {
       const updateData = { ...req.body };
       const allowedUpdates = {};
       if (updateData.username) allowedUpdates.username = updateData.username;
-      if (updateData.lastName) allowedUpdates.lastName = updateData.lastName; 
-      if (updateData.age) allowedUpdates.age = updateData.age;            
-      // No permitir la actualización de password o email directamente a través de esta ruta
+      if (updateData.lastName) allowedUpdates.lastName = updateData.lastName;
+      if (updateData.age) allowedUpdates.age = updateData.age;
+
+      // No permitir password/email aquí
       delete allowedUpdates.password;
       delete allowedUpdates.email;
+
       if (Object.keys(allowedUpdates).length === 0) {
         return res.status(400).json({ message: "No valid fields to update." });
       }
+
       const updatedUser = await UserDAO.update(req.userId, allowedUpdates);
-      // Devolver el usuario actualizado con los campos correctos
-      res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+
+      res.status(200).json({
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
   }
   /**
    * Get profile of the authenticated user.
-   *
    * Requires the `auth` middleware to set `req.userId`.
    */
   async getProfile(req, res) {
     try {
-      console.log("📱 GET Profile called - User ID:", req.userId);
-      console.log("📱 Headers:", req.headers);
-
       const userId = req.userId;
-      if (!userId) {
-        console.log("❌ No user ID in request");
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
       const user = await UserDAO.model
         .findById(userId)
-        .select("-password -resetToken -resetTokenExp");
+        .select("-password -resetPasswordToken -resetPasswordExpires");
 
-      if (!user) {
-        console.log("❌ User not found in database");
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      console.log("✅ User found:", user.email);
+      if (!user) return res.status(404).json({ message: "User not found" });
 
       res.status(200).json({
         _id: user._id,
@@ -110,7 +97,7 @@ class UserController extends GlobalController {
         age: user.age,
         email: user.email,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       });
     } catch (err) {
       console.error("❌ Error in getProfile:", err.message);
@@ -118,22 +105,67 @@ class UserController extends GlobalController {
     }
   }
   /**
-  * Handle password reset.
-  * Maneja el restablecimiento de contraseña.
-  */
-  async resetPassword(req, res) {
+   * Forgot password: generates token, saves to DB and sends recovery email.
+   */
+  async forgotPassword(req, res) {
     try {
-      const { token, newPassword } = req.body;
-      const result = await UserDAO.resetPassword(token, newPassword);
-      res.json(result);
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ message: "Email requerido" });
+
+      const user = await UserDAO.model.findOne({ email });
+      if (!user) {
+        return res
+          .status(200)
+          .json({ message: "Si existe el email te enviaremos instrucciones" });
+      }
+
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const hashed = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+      user.resetPasswordToken = hashed;
+      user.resetPasswordExpires = Date.now() + 3600 * 1000; // 1 hora
+      await user.save();
+
+      await sendRecoveryEmail(user.email, resetToken, user.email);
+      res.json({ message: "Email de recuperación enviado" });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      console.error("forgotPassword error:", err);
+      res.status(500).json({ message: "Error interno" });
     }
   }
+  /**
+   * Reset password with token + email.
+   */
+  async resetPassword(req, res) {
+    try {
+      const { token, email, password } = req.body;
+      if (!token || !email || !password)
+        return res.status(400).json({ message: "Faltan datos" });
 
+      const hashed = crypto.createHash("sha256").update(token).digest("hex");
+
+      const user = await UserDAO.model.findOne({
+        email,
+        resetPasswordToken: hashed,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) return res.status(400).json({ message: "Token inválido o expirado" });
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+
+      await user.save();
+      res.json({ message: "Contraseña actualizada correctamente" });
+    } catch (err) {
+      console.error("resetPassword error:", err);
+      res.status(500).json({ message: "Error interno" });
+    }
+  }
 }
 /**
  * Export a singleton instance of UserController.
- * Exportar una instancia única de UserController.
  */
 module.exports = new UserController();
