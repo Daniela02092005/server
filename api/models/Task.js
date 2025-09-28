@@ -32,8 +32,8 @@ const TaskSchema = new mongoose.Schema(
     datetime: { type: Date, required: true },
 
     /**
-     * Status of the task: pending or done.
-     * Estado de la tarea: pendiente o completada.
+     * Status of the task: pending, in-progress, or done.
+     * Estado de la tarea: pendiente, en progreso o completada.
      */
     status: { type: String, enum: ['pending', 'in-progress', 'done'], default: "pending" },
 
@@ -41,7 +41,7 @@ const TaskSchema = new mongoose.Schema(
      * Reference to the user who owns the task.
      * Referencia al usuario dueño de la tarea.
      */
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User ", required: true }
   },
   {
     /**
@@ -56,4 +56,4 @@ const TaskSchema = new mongoose.Schema(
  * Mongoose model for the Task collection.
  * Modelo Mongoose para la colección Task.
  */
-module.exports = mongoose.model('Task', taskSchema);
+module.exports = mongoose.model('Task', TaskSchema);
