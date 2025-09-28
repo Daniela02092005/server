@@ -8,6 +8,7 @@ const TaskDAO = require("../dao/TaskDAO");
 class TaskController extends GlobalController {
   /**
    * Create a new TaskController instance.
+   */
   constructor() {
     super(TaskDAO);
   }
@@ -34,6 +35,8 @@ class TaskController extends GlobalController {
   async getAll(req, res) {
     try {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
+      console.log('DAO instance in getAll:', this.dao);
+      console.log('this.dao in getAll:', this.dao);
       const tasks = await this.dao.getUserTasks(req.userId);
       res.status(200).json(tasks);
     } catch (err) {
@@ -72,7 +75,7 @@ class TaskController extends GlobalController {
       console.log('=== TASK UPDATE DEBUG ===');
       console.log('User  ID:', req.userId);
       console.log('Task ID:', req.params.id);
-      console.log('Request Body:', JSON.stringify(req.body, null, 2)); // Muestra todo el body, incluyendo status
+      console.log('Request Body:', JSON.stringify(req.body, null, 2));
       console.log('====================');
       const updatedTask = await this.dao.updateTask(req.params.id, req.body, req.userId);
       console.log('Updated Task Response:', JSON.stringify(updatedTask, null, 2));

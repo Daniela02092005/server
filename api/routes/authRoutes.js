@@ -26,14 +26,6 @@ router.post("/login", (req, res) => UserController.login(req, res));
 router.post("/logout", (req, res) => UserController.logout(req, res));
 
 /**
- * (Legacy) Recover account
- * POST /api/v1/auth/recover
- * ⚠️ Opción antigua, puedes eliminar si ya no la usas.
- * router.post("/recover", (req, res) => UserController.recover(req, res));
- */
-
-
-/**
  * Forgot password (send recovery email)
  * POST /api/v1/auth/forgot-password
  */
