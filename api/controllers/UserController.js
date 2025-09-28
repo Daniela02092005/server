@@ -117,14 +117,14 @@ class UserController extends GlobalController {
     try {
       const { email } = req.body;
       if (!email) {
-        return res.status(400).json({ message: "Email is required / Email requerido" });
+        return res.status(400).json({ message: "Email es requerido" });
       }
       const user = await this.dao.findByEmail(email);
       if (!user) {
-        // No revelar si el email existe por seguridad
-        return res.status(200).json({ message: "If the email exists, a recovery link has been sent / Si el email existe, se ha enviado un enlace de recuperación" });
+        // Por seguridad, no revelar si el email existe o no
+        return res.status(200).json({ message: "Si el email existe, se ha enviado un enlace de recuperación" });
       }
-      // Generar JWT token para recuperación (sin hashear, JWT maneja la seguridad)
+      // Generar token JWT para recuperación con expiración 1 hora
       const resetToken = jwt.sign(
         {
           id: user._id,
@@ -132,20 +132,22 @@ class UserController extends GlobalController {
           email: user.email
         },
         process.env.JWT_SECRET,
-        { expiresIn: '1h' } // 1 hora de expiración
+        { expiresIn: '1h' }
       );
-      // Guardar el token JWT en la DB (sin hashear)
-      await this.dao.generateRecoveryToken(user._id, resetToken);
-      // Enviar email con el token
+      // Guardar token y fecha de expiración en la base de datos
+      const resetTokenExpires = Date.now() + 3600000; // 1 hora en ms
+      await this.dao.saveResetToken(user._id, resetToken, resetTokenExpires);
+      // Enviar email con el enlace de recuperación
       await sendRecoveryEmail(user.email, resetToken);
       res.status(200).json({
-        message: "Recovery email sent / Email de recuperación enviado. Revisa tu bandeja de entrada."
+        message: "Email de recuperación enviado. Revisa tu bandeja de entrada."
       });
     } catch (error) {
-      console.error('Error in forgotPassword:', error);
-      res.status(500).json({ message: "Server error / Error del servidor" });
+      console.error('Error en forgotPassword:', error);
+      res.status(500).json({ message: "Error del servidor" });
     }
   }
+
   /**
    * Reset password with token + email.
    */
@@ -153,34 +155,29 @@ class UserController extends GlobalController {
     try {
       const { email, password, token } = req.body;
       if (!email || !password || !token) {
-        return res.status(400).json({ message: "Email, password, and token are required / Email, contraseña y token requeridos" });
+        return res.status(400).json({ message: "Email, contraseña y token son requeridos" });
       }
-      // Verificar el JWT token
+      // Verificar token JWT
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
         if (decoded.type !== 'recovery' || decoded.email !== email) {
-          throw new Error('Invalid token');
+          throw new Error('Token inválido');
         }
       } catch (jwtError) {
-        return res.status(400).json({ message: "Invalid or expired token / Token inválido o expirado" });
-      }
-      // Buscar usuario por email y token (sin hashear)
-      const user = await this.dao.findByEmailAndToken(email, token);
-      if (!user) {
-        return res.status(400).json({ message: "Invalid or expired token / Token inválido o expirado" });
+        return res.status(400).json({ message: "Token inválido o expirado" });
       }
       // Hashear la nueva contraseña
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-      // Actualizar contraseña y limpiar token
-      await this.dao.verifyAndResetPassword(user._id, hashedPassword, token);
+      // Actualizar contraseña y limpiar token en la base de datos
+      await this.dao.verifyAndResetPassword(email, token, hashedPassword);
       res.status(200).json({
-        message: "Password reset successfully / Contraseña restablecida exitosamente"
+        message: "Contraseña restablecida exitosamente"
       });
     } catch (error) {
-      console.error('Error in resetPassword:', error);
-      res.status(400).json({ message: error.message || "Invalid or expired token / Token inválido o expirado" });
+      console.error('Error en resetPassword:', error);
+      res.status(400).json({ message: error.message || "Token inválido o expirado" });
     }
   }
 }
