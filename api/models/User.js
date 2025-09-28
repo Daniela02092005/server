@@ -15,12 +15,12 @@ const UserSchema = new mongoose.Schema(
     /**
      * Apellido del usuario.
      */
-    lastName: { type: String, required: false },
+    lastName: { type: String, required: true },
 
     /**
      * Edad del usuario.
      */
-    age: { type: Number, required: false },
+    age: { type: Number, required: true },
 
     /**
      * Dirección de correo electrónico del usuario (única).
