@@ -37,9 +37,11 @@ class TaskController extends GlobalController {
   async create(req, res) {
     try {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
+      console.log('Create request body:', req.body);
       const task = await this.dao.createTask(req.body, req.userId);
       res.status(201).json(task);
     } catch (err) {
+      console.error('Error in create:', err); // ← TEMP
       res.status(400).json({ message: err.message });
     }
   }
@@ -84,10 +86,13 @@ class TaskController extends GlobalController {
   async update(req, res) {
     try {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
-
+      console.log('Update request body:', req.body);
+      console.log('Updating task ID:', req.params.id, 'for user:', req.userId);
       const updatedTask = await this.dao.updateTask(req.params.id, req.body, req.userId);
+      console.log('Updated task:', updatedTask);
       res.status(200).json(updatedTask);
     } catch (error) {
+      console.error('Error in update:', error);
       res.status(400).json({ message: error.message });
     }
   }
