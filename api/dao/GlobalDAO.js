@@ -13,9 +13,6 @@
 class GlobalDAO {
   /**
    * Create a new GlobalDAO.
-   * Crear un nuevo GlobalDAO.
-   * @param {import("mongoose").Model} model - The Mongoose model to operate on.
-   *                                           El modelo de Mongoose con el que operar.
    */
   constructor(model) {
     this.model = model;
@@ -23,11 +20,6 @@ class GlobalDAO {
 
   /**
    * Create and persist a new document.
-   * Crear y guardar un nuevo documento.
-   * @async
-   * @param {Object} data - The data used to create the document.
-   *                        Los datos usados para crear el documento.
-   * @returns {Promise<Object>} The created document. / El documento creado.
    */
   async create(data) {
     try {
@@ -40,11 +32,6 @@ class GlobalDAO {
 
   /**
    * Find a document by its ID.
-   * Buscar un documento por su ID.
-   * @async
-   * @param {string} id - The document's unique identifier.
-   *                      El identificador único del documento.
-   * @returns {Promise<Object>} The found document. / El documento encontrado.
    */
   async read(id) {
     try {
@@ -58,13 +45,6 @@ class GlobalDAO {
 
   /**
    * Update a document by ID.
-   * Actualizar un documento por su ID.
-   * @async
-   * @param {string} id - The document's unique identifier.
-   *                      El identificador único del documento.
-   * @param {Object} updateData - The data to update the document with.
-   *                              Los datos para actualizar el documento.
-   * @returns {Promise<Object>} The updated document. / El documento actualizado.
    */
   async update(id, updateData) {
     try {
@@ -82,11 +62,6 @@ class GlobalDAO {
 
   /**
    * Delete a document by ID.
-   * Eliminar un documento por su ID.
-   * @async
-   * @param {string} id - The document's unique identifier.
-   *                      El identificador único del documento.
-   * @returns {Promise<Object>} The deleted document. / El documento eliminado.
    */
   async delete(id) {
     try {
@@ -100,12 +75,6 @@ class GlobalDAO {
 
   /**
    * Retrieve all documents matching the given filter.
-   * Recuperar todos los documentos que coincidan con el filtro dado.
-   * @async
-   * @param {Object} [filter={}] - Optional MongoDB filter object.
-   *                               Objeto de filtro de MongoDB opcional.
-   * @returns {Promise<Array>} An array of matching documents. 
-   *                           Un arreglo con los documentos encontrados.
    */
   async getAll(filter = {}) {
     try {
@@ -118,9 +87,5 @@ class GlobalDAO {
 
 /**
  * Export the DAO class so it can be used by specific DAOs.
- * Exportar la clase DAO para que pueda ser usada por DAOs específicos.
- *
- * Example / Ejemplo:
- *   const UserDAO = new GlobalDAO(UserModel);
  */
 module.exports = GlobalDAO;
