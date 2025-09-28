@@ -174,19 +174,15 @@ class UserDAO extends GlobalDAO {
     }
   }
 
-  async generateRecoveryToken(userId, resetToken) {
-    try {
-      const user = await this.model.findById(userId);
-      if (!user) {
-        throw new Error('User  not found / Usuario no encontrado');
-      }
-      user.resetPasswordToken = resetToken; // Guardar JWT sin hashear
-      user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
-      await user.save();
-      console.log(`Recovery token generated for user ${userId}`);
-    } catch (error) {
-      throw new Error(`Error generating recovery token / Error generando token de recuperación: ${error.message}`);
-    }
+  async generateRecoveryToken(email) {
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("User  not found");
+    // Generar token y fecha de expiración
+    user.recoveryToken = generateTokenSomehow();
+    user.recoveryTokenExpiration = Date.now() + 3600000; // 1 hora
+    // Guardar sin validar campos obligatorios
+    await user.save({ validateBeforeSave: false });
+    return user.recoveryToken;
   }
 
   async verifyAndResetPassword(userId, hashedPassword, token) {
