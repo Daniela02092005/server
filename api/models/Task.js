@@ -41,7 +41,7 @@ const TaskSchema = new mongoose.Schema(
      * Reference to the user who owns the task.
      * Referencia al usuario dueño de la tarea.
      */
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User ", required: true }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
   },
   {
     /**
