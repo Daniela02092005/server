@@ -174,43 +174,36 @@ class UserDAO extends GlobalDAO {
     }
   }
 
-  async generateRecoveryToken(email) {
-    const user = await User.findOne({ email });
-    if (!user) throw new Error("User  not found");
-    // Generar token y fecha de expiración
-    user.recoveryToken = generateTokenSomehow();
-    user.recoveryTokenExpiration = Date.now() + 3600000; // 1 hora
-    // Guardar sin validar campos obligatorios
-    await user.save({ validateBeforeSave: false });
-    return user.recoveryToken;
-  }
-
-  async verifyAndResetPassword(userId, hashedPassword, token) {
+  async verifyAndResetPassword(email, token, hashedPassword) {
     try {
-      const user = await this.model.findById(userId);
-      if (!user || user.resetPasswordToken !== token || user.resetPasswordExpires < Date.now()) {
-        throw new Error('Invalid or expired token / Token inválido o expirado');
+      const user = await this.model.findOne({
+        email,
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+      });
+      if (!user) {
+        throw new Error('Token inválido o expirado');
       }
       user.password = hashedPassword;
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
       await user.save();
-      console.log(`Password reset for user ${userId}`);
+      console.log(`Contraseña restablecida para usuario ${user._id}`);
+      return user;
     } catch (error) {
-      throw new Error(`Error verifying and resetting password / Error verificando y reseteando contraseña: ${error.message}`);
+      throw new Error(`Error verificando y restableciendo contraseña: ${error.message}`);
     }
   }
 
   async create(userData) {
     try {
-      // Validación adicional para email único
-      const existingUser = await this.model.findOne({ email: userData.email });
-      if (existingUser) {
-        throw new Error('Email already exists / Email ya existe');
+      const existingUser  = await this.model.findOne({ email: userData.email });
+      if (existingUser ) {
+        throw new Error('Email ya existe');
       }
       return await super.create(userData);
     } catch (error) {
-      throw new Error(`Error creating user / Error creando usuario: ${error.message}`);
+      throw new Error(`Error creando usuario: ${error.message}`);
     }
   }
 }
