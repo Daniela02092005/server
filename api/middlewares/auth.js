@@ -1,9 +1,7 @@
 /**
  * Authentication middleware using JWT.
- * Middleware de autenticación usando JWT.
  *
  * Validates the presence and validity of a Bearer token.
- * Valida la presencia y validez de un token Bearer.
  */
 const jwt = require("jsonwebtoken");
 
@@ -17,7 +15,7 @@ module.exports = function auth(req, res, next) {
   try {
     const token = header.split(" ")[1];
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = payload.id; // Attach user ID to request / Adjuntar ID de usuario a la request
+    req.userId = payload.id; // Attach user ID to request 
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid token / Token inválido" });

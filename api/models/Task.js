@@ -11,13 +11,11 @@ const TaskSchema = new mongoose.Schema(
   {
     /**
      * Title of the task.
-     * Título de la tarea.
      */
     title: { type: String, required: true },
 
     /**
-     * Detailed description of the task (optional).
-     * Descripción detallada de la tarea (opcional).
+     * Detailed description of the task.
      */
     detail: { type: String },
 

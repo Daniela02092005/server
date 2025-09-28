@@ -33,7 +33,7 @@ app.get("/api/v1/health", (req, res) => {
  */
 const allowedOrigins = [
   process.env.FRONTEND_URL,  // https://client-theta-bay.vercel.app
-].filter(Boolean); // Filtrar valores undefined/null para producción limpia
+].filter(Boolean);
 
 const corsOptions = {
   origin: function (origin, callback) {   

@@ -8,10 +8,6 @@ const { sendRecoveryEmail } = require("../services/emailService");
 
 /**
  * Controller class for managing User resources and authentication.
- *
- * Extends the generic {@link GlobalController} to inherit CRUD operations,
- * and adds specific methods for user registration, login, logout,
- * password recovery, and profile updates.
  */
 class UserController extends GlobalController {
   constructor() {
@@ -58,7 +54,7 @@ class UserController extends GlobalController {
       if (updateData.lastName) allowedUpdates.lastName = updateData.lastName;
       if (updateData.age) allowedUpdates.age = updateData.age;
 
-      // No permitir password/email aquí
+      
       delete allowedUpdates.password;
       delete allowedUpdates.email;
 
@@ -73,7 +69,7 @@ class UserController extends GlobalController {
         user: updatedUser ,
       });
     } catch (err) {
-      console.error("Error in updateProfile:", err); // Logging para debug
+      console.error("Error in updateProfile:", err);
       res.status(400).json({ message: err.message });
     }
   }
@@ -83,7 +79,7 @@ class UserController extends GlobalController {
    */
   async getProfile(req, res) {
     try {
-      console.log("getProfile called with userId:", req.userId); // Logging para debug 404
+      console.log("getProfile called with userId:", req.userId);
       const userId = req.userId;
       if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
@@ -92,7 +88,7 @@ class UserController extends GlobalController {
         .select("-password -resetPasswordToken -resetPasswordExpires");
 
       if (!user) {
-        console.log("User  not found for ID:", userId); // Logging para debug
+        console.log("User  not found for ID:", userId);
         return res.status(404).json({ message: "User  not found" });
       }
 
@@ -121,10 +117,9 @@ class UserController extends GlobalController {
       }
       const user = await this.dao.findByEmail(email);
       if (!user) {
-        // Por seguridad, no revelar si el email existe o no
         return res.status(200).json({ message: "Si el email existe, se ha enviado un enlace de recuperación" });
       }
-      // Generar token JWT para recuperación con expiración 1 hora
+      
       const resetToken = jwt.sign(
         {
           id: user._id,
@@ -134,10 +129,9 @@ class UserController extends GlobalController {
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
-      // Guardar token y fecha de expiración en la base de datos
-      const resetTokenExpires = Date.now() + 3600000; // 1 hora en ms
+      
+      const resetTokenExpires = Date.now() + 3600000; // 1 hour in ms
       await this.dao.saveResetToken(user._id, resetToken, resetTokenExpires);
-      // Enviar email con el enlace de recuperación
       await sendRecoveryEmail(user.email, resetToken);
       res.status(200).json({
         message: "Email de recuperación enviado. Revisa tu bandeja de entrada."
@@ -157,7 +151,6 @@ class UserController extends GlobalController {
       if (!email || !password || !token) {
         return res.status(400).json({ message: "Email, contraseña y token son requeridos" });
       }
-      // Verificar token JWT
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -167,10 +160,9 @@ class UserController extends GlobalController {
       } catch (jwtError) {
         return res.status(400).json({ message: "Token inválido o expirado" });
       }
-      // Hashear la nueva contraseña
+
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-      // Actualizar contraseña y limpiar token en la base de datos
       await this.dao.verifyAndResetPassword(email, token, hashedPassword);
       res.status(200).json({
         message: "Contraseña restablecida exitosamente"

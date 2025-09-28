@@ -1,4 +1,4 @@
-// Task Data Access Object / Objeto de Acceso a Datos para Tareas
+// Task Data Access Object 
 const GlobalDAO = require("./GlobalDAO");
 const Task = require("../models/Task");
 
@@ -8,7 +8,6 @@ const Task = require("../models/Task");
 class TaskDAO extends GlobalDAO {
   /**
    * Create a new TaskDAO instance
-   * Crear una nueva instancia de TaskDAO
    */
   constructor() {
     super(Task);
@@ -16,12 +15,11 @@ class TaskDAO extends GlobalDAO {
 
   /**
    * Create a new task assigned to a user
-   * Crear una nueva tarea asignada a un usuario
    */
   async createTask(data, userId) {
     try {
-      // Mapeo de valores legacy para status (previene errores con datos antiguos)
-      let normalizedStatus = data.status || 'pending'; // Default si no se proporciona
+      
+      let normalizedStatus = data.status || 'pending';
       if (data.status !== undefined) {
         const legacyMap = {
           'por-hacer': 'pending',
@@ -37,8 +35,6 @@ class TaskDAO extends GlobalDAO {
         };
         const lowerStatus = (data.status || '').toString().toLowerCase().trim();
         normalizedStatus = legacyMap[lowerStatus] || data.status;
-
-        // Validar después del mapeo
         if (!['pending', 'in-progress', 'done'].includes(normalizedStatus)) {
           throw new Error('Invalid status on creation. Must be: pending, in-progress, or done / Estado inválido en creación. Debe ser: pending, in-progress o done');
         }
@@ -53,14 +49,11 @@ class TaskDAO extends GlobalDAO {
       };
 
       const task = await this.create(taskData);
-
-      // Log para depuración
       console.log(`Task created for user ${userId}. ID: ${task._id}, Status: ${task.status}`);
 
       return task;
     } catch (error) {
       console.error('Error in TaskDAO.createTask:', error);
-      // Captura errores específicos de validación
       if (error.name === 'ValidationError') {
         console.error('Validation details:', error.errors);
       }
@@ -70,11 +63,10 @@ class TaskDAO extends GlobalDAO {
 
   /**
    * Get all tasks for a specific user
-   * Obtener todas las tareas de un usuario específico
    */
   async getUserTasks(userId) {
     try {
-      return await this.model.find({ user: userId }).sort({ createdAt: -1 }); // Ordenar por más reciente (opcional, mejora UX)
+      return await this.model.find({ user: userId }).sort({ createdAt: -1 });
     } catch (error) {
       console.error('Error in TaskDAO.getUser Tasks:', error);
       throw new Error(`Error getting user tasks / Error obteniendo tareas del usuario: ${error.message}`);
@@ -83,11 +75,9 @@ class TaskDAO extends GlobalDAO {
 
   /**
    * Update a task if it belongs to the user
-   * Actualizar una tarea si pertenece al usuario
    */
   async updateTask(taskId, updateData, userId) {
     try {
-      // Mapeo de valores legacy para status (previene errores con datos antiguos)
       if (updateData.status !== undefined) {
         const legacyMap = {
           'por-hacer': 'pending',
@@ -104,13 +94,11 @@ class TaskDAO extends GlobalDAO {
         const lowerStatus = (updateData.status || '').toString().toLowerCase().trim();
         updateData.status = legacyMap[lowerStatus] || updateData.status;
 
-        // Validar después del mapeo
         if (!['pending', 'in-progress', 'done'].includes(updateData.status)) {
           throw new Error('Invalid status after mapping. Must be: pending, in-progress, or done / Estado inválido después del mapeo. Debe ser: pending, in-progress o done');
         }
       }
 
-      // Preparar datos de actualización con timestamp
       const updateWithTimestamp = {
         ...updateData,
         updatedAt: new Date()
@@ -126,13 +114,11 @@ class TaskDAO extends GlobalDAO {
         throw new Error("Task not found or not authorized / Tarea no encontrada o no autorizada");
       }
 
-      // Log para depuración
       console.log(`Task ${taskId} updated for user ${userId}. New status: ${updated.status}`);
 
       return updated;
     } catch (error) {
       console.error('Error in TaskDAO.updateTask:', error);
-      // Captura errores específicos de validación
       if (error.name === 'ValidationError') {
         console.error('Validation details:', error.errors);
         throw new Error(`Validation error: ${error.message} / Error de validación: ${error.message}`);
@@ -143,7 +129,6 @@ class TaskDAO extends GlobalDAO {
 
   /**
    * Delete a task if it belongs to the user
-   * Eliminar una tarea si pertenece al usuario
    */
   async deleteTask(taskId, userId) {
     try {
@@ -151,8 +136,6 @@ class TaskDAO extends GlobalDAO {
       if (!deleted) {
         throw new Error("Task not found or not authorized / Tarea no encontrada o no autorizada");
       }
-
-      // Log para depuración (opcional)
       console.log(`Task ${taskId} deleted for user ${userId}`);
 
       return deleted;
@@ -165,6 +148,5 @@ class TaskDAO extends GlobalDAO {
 
 /**
  * Export singleton instance of TaskDAO
- * Exportar instancia singleton de TaskDAO
  */
 module.exports = new TaskDAO();
