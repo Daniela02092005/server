@@ -132,7 +132,9 @@ class UserController extends GlobalController {
       
       const resetTokenExpires = Date.now() + 3600000; // 1 hour in ms
       await this.dao.saveResetToken(user._id, resetToken, resetTokenExpires);
+      console.log("Antes de enviar email");
       await sendRecoveryEmail(user.email, resetToken);
+      console.log("Después de enviar email");
       res.status(200).json({
         message: "Email de recuperación enviado. Revisa tu bandeja de entrada."
       });
