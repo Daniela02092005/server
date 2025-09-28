@@ -15,9 +15,6 @@ class UserDAO extends GlobalDAO {
 
   /**
    * Register a new user with hashed password.
-   *
-   * @param {Object} param0 - { username, lastName, age, email, password }
-   * @returns {Promise<Object>} Newly created user (without sensitive data).
    */
   async register({ username, lastName, age, email, password }) {
     const exists = await this.model.findOne({ email });
@@ -53,9 +50,6 @@ class UserDAO extends GlobalDAO {
 
   /**
   * Generate a password recovery token and send email.
-  *
-  * @param {Object} data - { email }
-  * @returns {Promise<string>} Message indicating recovery started.
   */
   async recover({ email }) {
     const user = await this.model.findOne({ email });
@@ -112,10 +106,6 @@ class UserDAO extends GlobalDAO {
 
   /**
   * Reset user password using a recovery token.
-  *
-  * @param {string} token - The recovery token.
-  * @param {string} newPassword - The new password.
-  * @returns {Promise<Object>} The updated user.
   */
   async resetPassword(token, newPassword) {
     try {
@@ -206,6 +196,20 @@ class UserDAO extends GlobalDAO {
       throw new Error(`Error creando usuario: ${error.message}`);
     }
   }
+
+  async saveResetToken(userId, token, expires) {
+    try {
+      const user = await this.model.findById(userId);
+      if (!user) throw new Error("Usuario no encontrado");
+      user.resetPasswordToken = token;
+      user.resetPasswordExpires = expires;
+      await user.save({ validateBeforeSave: false });
+      return user;
+    } catch (error) {
+      throw new Error(`Error guardando token de recuperación: ${error.message}`);
+    }
+  }
+
 }
 
 /**
