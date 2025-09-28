@@ -29,13 +29,13 @@ const TaskSchema = new mongoose.Schema(
      * Date and time of the task.
      * Fecha y hora de la tarea.
      */
-    datetime: { type: Date },
+    datetime: { type: Date, required: true },
 
     /**
      * Status of the task: pending or done.
      * Estado de la tarea: pendiente o completada.
      */
-    status: { type: String, enum: ["pending", "done"], default: "pending" },
+    status: { type: String, enum: ['pending', 'in-progress', 'done'], default: "pending" },
 
     /**
      * Reference to the user who owns the task.
