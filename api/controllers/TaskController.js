@@ -4,35 +4,16 @@ const TaskDAO = require("../dao/TaskDAO");
 
 /**
  * Controller class for managing Task resources.
- * Clase controladora para gestionar recursos de Tareas.
- *
- * Extends the generic {@link GlobalController} to inherit CRUD operations,
- * and overrides specific methods to ensure tasks are always associated
- * with the authenticated user.
- *
- * Extiende el {@link GlobalController} genérico para heredar operaciones CRUD,
- * y sobreescribe métodos específicos para asegurar que las tareas siempre estén
- * asociadas al usuario autenticado.
  */
 class TaskController extends GlobalController {
   /**
    * Create a new TaskController instance.
-   * Crear una nueva instancia de TaskController.
-   *
-   * The constructor passes the TaskDAO to the parent class so that
-   * all inherited methods (create, read, update, delete, getAll)
-   * operate on the Task model.
-   *
-   * El constructor pasa el TaskDAO a la clase padre para que todos
-   * los métodos heredados operen sobre el modelo de tareas.
-   */
   constructor() {
     super(TaskDAO);
   }
 
   /**
    * Create a new task for the authenticated user.
-   * Crear una nueva tarea para el usuario autenticado.
    */
   async create(req, res) {
     try {
@@ -85,14 +66,20 @@ class TaskController extends GlobalController {
    */
   async update(req, res) {
     try {
-      if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
-      console.log('Update request body:', req.body);
-      console.log('Updating task ID:', req.params.id, 'for user:', req.userId);
+      if (!req.userId) {
+        return res.status(401).json({ message: "Unauthorized / No autorizado" });
+      }
+      console.log('=== TASK UPDATE DEBUG ===');
+      console.log('User  ID:', req.userId);
+      console.log('Task ID:', req.params.id);
+      console.log('Request Body:', JSON.stringify(req.body, null, 2)); // Muestra todo el body, incluyendo status
+      console.log('====================');
       const updatedTask = await this.dao.updateTask(req.params.id, req.body, req.userId);
-      console.log('Updated task:', updatedTask);
+      console.log('Updated Task Response:', JSON.stringify(updatedTask, null, 2));
       res.status(200).json(updatedTask);
     } catch (error) {
-      console.error('Error in update:', error);
+      console.error('Error in TaskController.update:', error);
+      console.log('Error Details:', error.message);
       res.status(400).json({ message: error.message });
     }
   }
@@ -115,9 +102,7 @@ class TaskController extends GlobalController {
 
 /**
  * Export a singleton instance of TaskController.
- * Exportar una instancia única de TaskController.
  *
  * This allows reuse across routes without creating multiple instances.
- * Esto permite reutilizarlo en las rutas sin crear múltiples instancias.
  */
 module.exports = new TaskController();

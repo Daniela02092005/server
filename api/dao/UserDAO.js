@@ -6,20 +6,9 @@ const GlobalDAO = require("./GlobalDAO");
 const User = require("../models/User");
 const { sendRecoveryEmail } = require("../services/emailService"); 
 /**
- * Data Access Object (DAO) for the User model.
- *
- * Extends the generic {@link GlobalDAO} class to provide
- * database operations (create, read, update, delete, getAll)
- * specifically for User documents.
+ * Data Access Object (DAO) for the User model..
  */
 class UserDAO extends GlobalDAO {
-  /**
-   * Create a new UserDAO instance.
-   *
-   * Passes the User Mongoose model to the parent class so that
-   * all inherited CRUD methods operate on the User collection.
-   *
-   */
   constructor() {
     super(User);
   }
@@ -47,9 +36,6 @@ class UserDAO extends GlobalDAO {
 
   /**
    * Authenticate a user and return JWT token.
-   *
-   * @param {Object} param0 - { email, password }
-   * @returns {Promise<Object>} { token, user }
    */
   async login({ email, password }) {
     const user = await this.model.findOne({ email });
@@ -106,10 +92,6 @@ class UserDAO extends GlobalDAO {
 
   /**
    * Update a user's profile.
-   *
-   * @param {string} id - User ID.
-   * @param {Object} updateData - Data to update.
-   * @returns {Promise<Object>} Updated user.
    */
   async update(id, updateData) {
     try {
@@ -169,6 +151,70 @@ class UserDAO extends GlobalDAO {
         throw new Error("Invalid token");
       }
       throw new Error(error.message);
+    }
+  }
+
+  async findByEmail(email) {
+    try {
+      return await this.model.findOne({ email }).select('+password'); // Incluir password para login/recovery
+    } catch (error) {
+      throw new Error(`Error finding user by email / Error buscando usuario por email: ${error.message}`);
+    }
+  }
+
+  async findByEmailAndToken(email, token) {
+    try {
+      return await this.model.findOne({
+        email,
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+      }).select('+password');
+    } catch (error) {
+      throw new Error(`Error finding user by email and token / Error buscando usuario por email y token: ${error.message}`);
+    }
+  }
+
+  async generateRecoveryToken(userId, resetToken) {
+    try {
+      const user = await this.model.findById(userId);
+      if (!user) {
+        throw new Error('User  not found / Usuario no encontrado');
+      }
+      user.resetPasswordToken = resetToken; // Guardar JWT sin hashear
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
+      await user.save();
+      console.log(`Recovery token generated for user ${userId}`);
+    } catch (error) {
+      throw new Error(`Error generating recovery token / Error generando token de recuperación: ${error.message}`);
+    }
+  }
+
+  async verifyAndResetPassword(userId, hashedPassword, token) {
+    try {
+      const user = await this.model.findById(userId);
+      if (!user || user.resetPasswordToken !== token || user.resetPasswordExpires < Date.now()) {
+        throw new Error('Invalid or expired token / Token inválido o expirado');
+      }
+      user.password = hashedPassword;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      console.log(`Password reset for user ${userId}`);
+    } catch (error) {
+      throw new Error(`Error verifying and resetting password / Error verificando y reseteando contraseña: ${error.message}`);
+    }
+  }
+
+  async create(userData) {
+    try {
+      // Validación adicional para email único
+      const existingUser = await this.model.findOne({ email: userData.email });
+      if (existingUser) {
+        throw new Error('Email already exists / Email ya existe');
+      }
+      return await super.create(userData);
+    } catch (error) {
+      throw new Error(`Error creating user / Error creando usuario: ${error.message}`);
     }
   }
 }
