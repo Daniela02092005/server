@@ -1,5 +1,6 @@
 const GlobalController = require("./GlobalController");
 const UserDAO = require("../dao/UserDAO");
+const jwt = require('jsonwebtoken');
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
@@ -115,26 +116,34 @@ class UserController extends GlobalController {
   async forgotPassword(req, res) {
     try {
       const { email } = req.body;
-      if (!email) return res.status(400).json({ message: "Email requerido" });
-
-      const user = await UserDAO.model.findOne({ email });
-      if (!user) {
-        // Por seguridad, no revelar si el email existe
-        return res.status(200).json({ message: "Si el email existe, te enviaremos instrucciones" });
+      if (!email) {
+        return res.status(400).json({ message: "Email is required / Email requerido" });
       }
-
-      const resetToken = crypto.randomBytes(32).toString("hex");
-      const hashed = crypto.createHash("sha256").update(resetToken).digest("hex");
-
-      user.resetPasswordToken = hashed;
-      user.resetPasswordExpires = Date.now() + 3600 * 1000; // 1 hora
-      await user.save();
-
-      await sendRecoveryEmail(user.email, resetToken, user.email);
-      res.json({ message: "Email de recuperación enviado" });
-    } catch (err) {
-      console.error("forgotPassword error:", err);
-      res.status(500).json({ message: "Error interno al enviar email" });
+      const user = await this.dao.findByEmail(email);
+      if (!user) {
+        // No revelar si el email existe por seguridad
+        return res.status(200).json({ message: "If the email exists, a recovery link has been sent / Si el email existe, se ha enviado un enlace de recuperación" });
+      }
+      // Generar JWT token para recuperación (sin hashear, JWT maneja la seguridad)
+      const resetToken = jwt.sign(
+        {
+          id: user._id,
+          type: 'recovery',
+          email: user.email
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' } // 1 hora de expiración
+      );
+      // Guardar el token JWT en la DB (sin hashear)
+      await this.dao.generateRecoveryToken(user._id, resetToken);
+      // Enviar email con el token
+      await sendRecoveryEmail(user.email, resetToken);
+      res.status(200).json({
+        message: "Recovery email sent / Email de recuperación enviado. Revisa tu bandeja de entrada."
+      });
+    } catch (error) {
+      console.error('Error in forgotPassword:', error);
+      res.status(500).json({ message: "Server error / Error del servidor" });
     }
   }
   /**
@@ -142,30 +151,36 @@ class UserController extends GlobalController {
    */
   async resetPassword(req, res) {
     try {
-      const { token, email, password } = req.body;
-      if (!token || !email || !password)
-        return res.status(400).json({ message: "Faltan datos: token, email y password" });
-
-      const hashed = crypto.createHash("sha256").update(token).digest("hex");
-
-      const user = await UserDAO.model.findOne({
-        email,
-        resetPasswordToken: hashed,
-        resetPasswordExpires: { $gt: Date.now() },
-      });
-
-      if (!user) return res.status(400).json({ message: "Token inválido o expirado" });
-
+      const { email, password, token } = req.body;
+      if (!email || !password || !token) {
+        return res.status(400).json({ message: "Email, password, and token are required / Email, contraseña y token requeridos" });
+      }
+      // Verificar el JWT token
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.type !== 'recovery' || decoded.email !== email) {
+          throw new Error('Invalid token');
+        }
+      } catch (jwtError) {
+        return res.status(400).json({ message: "Invalid or expired token / Token inválido o expirado" });
+      }
+      // Buscar usuario por email y token (sin hashear)
+      const user = await this.dao.findByEmailAndToken(email, token);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired token / Token inválido o expirado" });
+      }
+      // Hashear la nueva contraseña
       const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpires = undefined;
-
-      await user.save();
-      res.json({ message: "Contraseña actualizada correctamente" });
-    } catch (err) {
-      console.error("resetPassword error:", err);
-      res.status(500).json({ message: "Error interno" });
+      const hashedPassword = await bcrypt.hash(password, salt);
+      // Actualizar contraseña y limpiar token
+      await this.dao.verifyAndResetPassword(user._id, hashedPassword, token);
+      res.status(200).json({
+        message: "Password reset successfully / Contraseña restablecida exitosamente"
+      });
+    } catch (error) {
+      console.error('Error in resetPassword:', error);
+      res.status(400).json({ message: error.message || "Invalid or expired token / Token inválido o expirado" });
     }
   }
 }
