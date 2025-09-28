@@ -54,12 +54,10 @@ class UserDAO extends GlobalDAO {
   async recover({ email }) {
     const user = await this.model.findOne({ email });
     if (!user) {
-      // Por seguridad, no revelar que el email no existe
       console.log("Recovery requested for non-existent email:", email);
       return "If the email exists, a recovery link will be sent.";
     }
 
-    // Generar token JWT
     const resetToken = jwt.sign(
       {
         id: user._id,
@@ -70,9 +68,9 @@ class UserDAO extends GlobalDAO {
       { expiresIn: '1h' }
     );
 
-    // Guardar en la base de datos
+    
     user.resetToken = resetToken;
-    user.resetTokenExp = Date.now() + 3600000; // 1 hora
+    user.resetTokenExp = Date.now() + 3600000; // 1 hour
 
     try {
       await user.save();
@@ -109,17 +107,15 @@ class UserDAO extends GlobalDAO {
   */
   async resetPassword(token, newPassword) {
     try {
-      // Primero verificar el JWT
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       if (decoded.type !== 'recovery') {
         throw new Error("Invalid token type");
       }
 
-      // Luego buscar en la base de datos
       const user = await this.model.findOne({
         resetToken: token,
         resetTokenExp: { $gt: Date.now() },
-        _id: decoded.id // Verificar que coincida el ID
+        _id: decoded.id
       });
 
       if (!user) {
@@ -146,7 +142,7 @@ class UserDAO extends GlobalDAO {
 
   async findByEmail(email) {
     try {
-      return await this.model.findOne({ email }).select('+password'); // Incluir password para login/recovery
+      return await this.model.findOne({ email }).select('+password');
     } catch (error) {
       throw new Error(`Error finding user by email / Error buscando usuario por email: ${error.message}`);
     }

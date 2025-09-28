@@ -1,14 +1,5 @@
 /**
  * Generic Data Access Object (DAO) class.
- * Clase Genérica de Acceso a Datos (DAO).
- *
- * Provides reusable CRUD operations for any Mongoose model.
- * Proporciona operaciones CRUD reutilizables para cualquier modelo de Mongoose.
- *
- * Specific DAOs (e.g., UserDAO, TaskDAO) should extend this class
- * DAOs específicos (ej: UserDAO, TaskDAO) deben extender esta clase
- * and inject their model via the constructor.
- * e inyectar su modelo a través del constructor.
  */
 class GlobalDAO {
   /**

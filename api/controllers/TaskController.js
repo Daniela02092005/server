@@ -1,4 +1,3 @@
-//Creacion del controlador tareas
 const GlobalController = require("./GlobalController");
 const TaskDAO = require("../dao/TaskDAO");
 
@@ -30,7 +29,6 @@ class TaskController extends GlobalController {
 
   /**
    * Get all tasks for the authenticated user.
-   * Obtener todas las tareas del usuario autenticado.
    */
   async getAll(req, res) {
     try {
@@ -46,7 +44,6 @@ class TaskController extends GlobalController {
 
   /**
    * Get a specific task if it belongs to the user.
-   * Obtener una tarea específica si pertenece al usuario.
    */
   async read(req, res) {
     try {
@@ -65,7 +62,6 @@ class TaskController extends GlobalController {
 
   /**
    * Update a task if it belongs to the user.
-   * Actualizar una tarea si pertenece al usuario.
    */
   async update(req, res) {
     try {
@@ -89,7 +85,6 @@ class TaskController extends GlobalController {
 
   /**
    * Delete a task if it belongs to the user.
-   * Eliminar una tarea si pertenece al usuario.
    */
   async delete(req, res) {
     try {
