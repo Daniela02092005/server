@@ -2,55 +2,55 @@ const mongoose = require("mongoose");
 
 /**
  * User schema definition.
- * Representa los usuarios de la aplicación almacenados en MongoDB.
- * Incluye campos de autenticación, email único y tokens de recuperación.
+ * Represents the users of the application stored in MongoDB.
+ * Includes authentication fields, unique email, and recovery tokens.
  */
 const UserSchema = new mongoose.Schema(
   {
-    /**
-     * Nombre de usuario único.
+      /**
+     * Unique username.
      */
     username: { type: String, required: true },
 
-    /**
-     * Apellido del usuario.
+     /**
+     * User's last name.
      */
     lastName: { type: String, required: true },
 
     /**
-     * Edad del usuario.
+     * User's age.
      */
     age: { type: Number, required: true },
 
     /**
-     * Dirección de correo electrónico del usuario (única).
+     * User's email address (must be unique).
      */
     email: { type: String, required: true, unique: true },
 
     /**
-     * Contraseña del usuario (debe estar hasheada antes de guardarse).
+     * User's password (should be hashed before saving).
      */
     password: { type: String, required: true },
 
-    /**
-     * Token para recuperación de contraseña (hashed con sha256).
+   /**
+     * Token for password recovery (hashed with sha256).
      */
     resetPasswordToken: { type: String },
 
     /**
-     * Fecha de expiración del token de recuperación.
+     * Expiration date for the recovery token.
      */
     resetPasswordExpires: { type: Date }
   },
   {
     /**
-     * createdAt y updatedAt automáticos.
+     * Automatic createdAt and updatedAt fields.
      */
     timestamps: true
   }
 );
 
 /**
- * Modelo Mongoose para la colección `users`.
+ * Mongoose model for the `users` collection.
  */
 module.exports = mongoose.model("User", UserSchema);

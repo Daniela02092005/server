@@ -1,27 +1,38 @@
-const postmark = require("postmark");
+const axios = require("axios");
 require("dotenv").config();
-
-const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
 
 const sendRecoveryEmail = async (userEmail, resetToken) => {
   try {
-    const recoveryLink = `${process.env.FRONTEND_URL}/reset_password.html?token=${resetToken}&email=${encodeURIComponent(userEmail)}`;
-    await client.sendEmail({
-      From: process.env.EMAIL_USER,
-      To: userEmail,
-      Subject: "Recuperación de Contraseña - CodeNova",
-      HtmlBody: `
-        <h2>Recupera tu contraseña</h2>
-        <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-        <a href="${recoveryLink}" style="background-color: #8300BF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
-        <p>Este enlace expira en 1 hora.</p>
-        <p>Si no solicitaste esto, ignora este email.</p>
-      `,
+    const recoveryLink = `${process.env.FRONTEND_URL}/#/reset_password?token=${resetToken}&email=${encodeURIComponent(userEmail)}`;
+
+    const serviceId = process.env.EMAILJS_SERVICE_ID;
+    const templateId = process.env.EMAILJS_TEMPLATE_ID;
+    const userId = process.env.EMAILJS_USER_ID;
+
+    if (!serviceId || !templateId || !userId) {
+      throw new Error("EmailJS credentials are not configured in environment variables.");
+    }
+
+    const emailData = {
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: userId,
+      template_params: {
+        to_email: userEmail,
+        recovery_link: recoveryLink,
+      }
+    };
+
+    await axios.post('https://api.emailjs.com/api/v1.0/email/send', emailData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
-    console.log(`Recovery email sent to ${userEmail}`);
+
+    console.log(`Recovery email sent to ${userEmail} via EmailJS`);
   } catch (error) {
-    console.error("Error sending recovery email:", error);
-    throw new Error(`Error sending email / Error enviando email: ${error.message}`);
+    console.error("Error sending recovery email with EmailJS:", error.response ? error.response.data : error.message);
+    throw new Error(`Error sending email / Error enviando email: ${error.response ? error.response.data.message : error.message}`);
   }
 };
 
