@@ -121,10 +121,16 @@ class UserDAO extends GlobalDAO {
 
   async deleteById(userId) {
     try {
+      console.log(`[User DAO] Intentando eliminar usuario con ID: ${userId}`);
       const deletedUser  = await this.model.findByIdAndDelete(userId);
-      if (!deletedUser ) throw new Error("User  not found / Usuario no encontrado");
+      if (!deletedUser ) {
+        console.error(`[User DAO] Usuario no encontrado para eliminar con ID: ${userId}`);
+        throw new Error("User  not found / Usuario no encontrado");
+      }
+      console.log(`[User DAO] Usuario eliminado correctamente con ID: ${userId}`);
       return deletedUser ;
     } catch (error) {
+      console.error(`[User DAO] Error eliminando usuario con ID: ${userId} - ${error.message}`);
       throw new Error(`Error deleting user / Error eliminando usuario: ${error.message}`);
     }
   }
