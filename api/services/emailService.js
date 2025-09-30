@@ -11,7 +11,7 @@ console.log("  Frontend URL:", process.env.FRONTEND_URL);
 
 let transporter = null;
 
-// Solo inicializamos nodemailer si no estamos en modo API
+// 🚀 Solo inicializamos nodemailer si no estamos en modo API
 if (!useApiOnly) {
   const port = process.env.EMAIL_PORT || 587;
 
@@ -29,7 +29,7 @@ if (!useApiOnly) {
     },
   });
 } else {
-  // Configurar cliente API Brevo
+  // 🚀 Configurar cliente API Brevo
   let defaultClient = SibApiV3Sdk.ApiClient.instance;
   let apiKey = defaultClient.authentications["api-key"];
   apiKey.apiKey = process.env.BREVO_API_KEY;
@@ -45,7 +45,7 @@ const sendRecoveryEmail = async (userEmail, resetToken) => {
     console.log("🔗 Enlace de recuperación generado:", recoveryLink);
 
     if (useApiOnly) {
-      // 🚀 Usar API de Brevo (Render)
+      // 🚀 Usar API de Brevo (Render/Producción)
       const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
       const sendSmtpEmail = {
         sender: { email: process.env.EMAIL_SENDER, name: "CodeNova" },
@@ -63,7 +63,7 @@ const sendRecoveryEmail = async (userEmail, resetToken) => {
       const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
       console.log("✅ Email enviado por API:", data.messageId || data);
     } else {
-      // 🚀 Usar SMTP (local)
+      // 🚀 Usar SMTP (solo local)
       const mailOptions = {
         from: process.env.EMAIL_SENDER,
         to: userEmail,
