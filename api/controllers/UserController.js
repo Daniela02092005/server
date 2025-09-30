@@ -155,11 +155,16 @@ class UserController extends GlobalController {
 
   async deleteProfile(req, res) {
     try {
-      if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
+      console.log(`[User Controller] Solicitud para eliminar perfil del usuario ID: ${req.userId}`);
+      if (!req.userId) {
+        console.warn("[User Controller] Usuario no autenticado intentando eliminar perfil");
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       await UserDAO.deleteById(req.userId);
+      console.log(`[User Controller] Usuario eliminado correctamente ID: ${req.userId}`);
       res.status(200).json({ message: "Usuario eliminado correctamente" });
     } catch (error) {
-      console.error("Error in deleteProfile:", error);
+      console.error(`[User Controller] Error en deleteProfile para usuario ID: ${req.userId} - ${error.message}`);
       res.status(400).json({ message: error.message });
     }
   }
