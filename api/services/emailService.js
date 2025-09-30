@@ -1,24 +1,31 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-const port = process.env.EMAIL_PORT || process.env.EMAIL_PORT_ALT || 587;
+const port = process.env.EMAIL_PORT || 587;
+
+console.log("📧 Configuración SMTP inicializada:");
+console.log("  Host:", process.env.EMAIL_HOST);
+console.log("  Port:", port);
+console.log("  User:", process.env.EMAIL_USER);
+console.log("  Frontend URL:", process.env.FRONTEND_URL);
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: port,
-  secure: port == 465, // true solo si usas 465
+  secure: false, // Brevo usa STARTTLS en 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
   },
 });
 
 const sendRecoveryEmail = async (userEmail, resetToken) => {
   try {
+    console.log("🔄 Preparando envío de email a:", userEmail);
+
     const recoveryLink = `${process.env.FRONTEND_URL}/reset_password.html?token=${resetToken}&email=${encodeURIComponent(userEmail)}`;
+    console.log("🔗 Enlace de recuperación generado:", recoveryLink);
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: userEmail,
@@ -31,10 +38,19 @@ const sendRecoveryEmail = async (userEmail, resetToken) => {
         <p>Si no solicitaste esto, ignora este email.</p>
       `,
     };
-    await transporter.sendMail(mailOptions);
+
+    console.log("📨 Opciones de correo preparadas:", {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+    });
+
+    let info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email enviado:", info.messageId || info);
+
     console.log(`Recovery email sent to ${userEmail}`);
   } catch (error) {
-    console.error("Error sending recovery email:", error);
+    console.error("❌ Error sending recovery email:", error);
     throw new Error(`Error sending email / Error enviando email: ${error.message}`);
   }
 };
