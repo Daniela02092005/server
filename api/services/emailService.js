@@ -1,52 +1,94 @@
+const nodemailer = require("nodemailer");
 require("dotenv").config();
-const brevo = require("@getbrevo/brevo");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-// Inicializar cliente de Brevo
-const client = new brevo.TransactionalEmailsApi();
-client.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+const useApiOnly = process.env.USE_BREVO_API === "true";
 
-console.log("📧 Configuración Brevo inicializada:");
-console.log("  Sender:", process.env.EMAIL_SENDER);
+// 📧 Configuración inicial
+console.log("📧 Configuración de Email inicializada:");
+console.log("  Modo API:", useApiOnly);
 console.log("  Frontend URL:", process.env.FRONTEND_URL);
+
+let transporter = null;
+
+// Solo inicializamos nodemailer si no estamos en modo API
+if (!useApiOnly) {
+  const port = process.env.EMAIL_PORT || 587;
+
+  console.log("  Host:", process.env.EMAIL_HOST);
+  console.log("  Port:", port);
+  console.log("  User (sender):", process.env.EMAIL_SENDER);
+
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: port,
+    secure: false, // Brevo usa STARTTLS en 587
+    auth: {
+      user: process.env.EMAIL_SENDER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+} else {
+  // Configurar cliente API Brevo
+  let defaultClient = SibApiV3Sdk.ApiClient.instance;
+  let apiKey = defaultClient.authentications["api-key"];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+}
 
 const sendRecoveryEmail = async (userEmail, resetToken) => {
   try {
     console.log("🔄 Preparando envío de email a:", userEmail);
 
-    const recoveryLink = `${process.env.FRONTEND_URL}/reset_password.html?token=${resetToken}&email=${encodeURIComponent(userEmail)}`;
+    const recoveryLink = `${process.env.FRONTEND_URL}/reset_password.html?token=${resetToken}&email=${encodeURIComponent(
+      userEmail
+    )}`;
     console.log("🔗 Enlace de recuperación generado:", recoveryLink);
 
-    const sendSmtpEmail = {
-      sender: { email: process.env.EMAIL_SENDER, name: "CodeNova" },
-      to: [{ email: userEmail }],
-      subject: "Recuperación de Contraseña - CodeNova",
-      htmlContent: `
-        <h2>Recupera tu contraseña</h2>
-        <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-        <a href="${recoveryLink}" style="background-color: #8300BF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
-        <p>Este enlace expira en 1 hora.</p>
-        <p>Si no solicitaste esto, ignora este email.</p>
-      `,
-    };
+    if (useApiOnly) {
+      // 🚀 Usar API de Brevo (Render)
+      const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+      const sendSmtpEmail = {
+        sender: { email: process.env.EMAIL_SENDER, name: "CodeNova" },
+        to: [{ email: userEmail }],
+        subject: "Recuperación de Contraseña - CodeNova",
+        htmlContent: `
+          <h2>Recupera tu contraseña</h2>
+          <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+          <a href="${recoveryLink}" style="background-color: #8300BF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
+          <p>Este enlace expira en 1 hora.</p>
+          <p>Si no solicitaste esto, ignora este email.</p>
+        `,
+      };
 
-    console.log("📨 Opciones de correo preparadas:", {
-      from: sendSmtpEmail.sender.email,
-      to: userEmail,
-      subject: sendSmtpEmail.subject,
-    });
-
-    const data = await client.sendTransacEmail(sendSmtpEmail);
-    console.log("✅ Email enviado con Brevo API:", data.messageId || data);
-
-    console.log(`Recovery email sent to ${userEmail}`);
-  } catch (error) {
-    console.error("❌ Error enviando email con Brevo API:");
-    if (error.response && error.response.text) {
-      console.error("Detalles del error:", error.response.text);
+      const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+      console.log("✅ Email enviado por API:", data.messageId || data);
     } else {
-      console.error(error);
+      // 🚀 Usar SMTP (local)
+      const mailOptions = {
+        from: process.env.EMAIL_SENDER,
+        to: userEmail,
+        subject: "Recuperación de Contraseña - CodeNova",
+        html: `
+          <h2>Recupera tu contraseña</h2>
+          <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+          <a href="${recoveryLink}" style="background-color: #8300BF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
+          <p>Este enlace expira en 1 hora.</p>
+          <p>Si no solicitaste esto, ignora este email.</p>
+        `,
+      };
+
+      console.log("📨 Opciones de correo preparadas:", {
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+      });
+
+      let info = await transporter.sendMail(mailOptions);
+      console.log("✅ Email enviado por SMTP:", info.messageId || info);
     }
-    throw new Error(`Error enviando email: ${error.message}`);
+  } catch (error) {
+    console.error("❌ Error sending recovery email:", error);
+    throw new Error(`Error sending email: ${error.message}`);
   }
 };
 
