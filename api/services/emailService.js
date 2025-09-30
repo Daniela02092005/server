@@ -1,23 +1,13 @@
-const nodemailer = require("nodemailer");
 require("dotenv").config();
+const brevo = require("@getbrevo/brevo");
 
-const port = process.env.EMAIL_PORT || 587;
+// Inicializar cliente de Brevo
+const client = new brevo.TransactionalEmailsApi();
+client.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
-console.log("📧 Configuración SMTP inicializada:");
-console.log("  Host:", process.env.EMAIL_HOST);
-console.log("  Port:", port);
-console.log("  User:", process.env.EMAIL_USER);
+console.log("📧 Configuración Brevo inicializada:");
+console.log("  Sender:", process.env.EMAIL_SENDER);
 console.log("  Frontend URL:", process.env.FRONTEND_URL);
-
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: port,
-  secure: false, // Brevo usa STARTTLS en 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 const sendRecoveryEmail = async (userEmail, resetToken) => {
   try {
@@ -26,11 +16,11 @@ const sendRecoveryEmail = async (userEmail, resetToken) => {
     const recoveryLink = `${process.env.FRONTEND_URL}/reset_password.html?token=${resetToken}&email=${encodeURIComponent(userEmail)}`;
     console.log("🔗 Enlace de recuperación generado:", recoveryLink);
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: userEmail,
+    const sendSmtpEmail = {
+      sender: { email: process.env.EMAIL_SENDER, name: "CodeNova" },
+      to: [{ email: userEmail }],
       subject: "Recuperación de Contraseña - CodeNova",
-      html: `
+      htmlContent: `
         <h2>Recupera tu contraseña</h2>
         <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
         <a href="${recoveryLink}" style="background-color: #8300BF; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
@@ -40,18 +30,23 @@ const sendRecoveryEmail = async (userEmail, resetToken) => {
     };
 
     console.log("📨 Opciones de correo preparadas:", {
-      from: mailOptions.from,
-      to: mailOptions.to,
-      subject: mailOptions.subject,
+      from: sendSmtpEmail.sender.email,
+      to: userEmail,
+      subject: sendSmtpEmail.subject,
     });
 
-    let info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email enviado:", info.messageId || info);
+    const data = await client.sendTransacEmail(sendSmtpEmail);
+    console.log("✅ Email enviado con Brevo API:", data.messageId || data);
 
     console.log(`Recovery email sent to ${userEmail}`);
   } catch (error) {
-    console.error("❌ Error sending recovery email:", error);
-    throw new Error(`Error sending email / Error enviando email: ${error.message}`);
+    console.error("❌ Error enviando email con Brevo API:");
+    if (error.response && error.response.text) {
+      console.error("Detalles del error:", error.response.text);
+    } else {
+      console.error(error);
+    }
+    throw new Error(`Error enviando email: ${error.message}`);
   }
 };
 
