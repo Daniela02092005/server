@@ -118,6 +118,16 @@ class UserDAO extends GlobalDAO {
       throw new Error(`Error creating user / Error creando usuario: ${error.message}`);
     }
   }
+
+  async deleteById(userId) {
+    try {
+      const deletedUser  = await this.model.findByIdAndDelete(userId);
+      if (!deletedUser ) throw new Error("User  not found / Usuario no encontrado");
+      return deletedUser ;
+    } catch (error) {
+      throw new Error(`Error deleting user / Error eliminando usuario: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new UserDAO();
