@@ -1,21 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto"); 
-
 const GlobalDAO = require("./GlobalDAO");
 const User = require("../models/User");
-const { sendRecoveryEmail } = require("../services/emailService"); 
-/**
- * Data Access Object (DAO) for the User model..
- */
+const { sendRecoveryEmail } = require("../services/emailService");
+
 class UserDAO extends GlobalDAO {
   constructor() {
     super(User);
   }
 
-  /**
-   * Register a new user with hashed password.
-   */
   async register({ username, lastName, age, email, password }) {
     const exists = await this.model.findOne({ email });
     if (exists) throw new Error("Email already registered / Correo ya registrado");
@@ -31,9 +24,6 @@ class UserDAO extends GlobalDAO {
     };
   }
 
-  /**
-   * Authenticate a user and return JWT token.
-   */
   async login({ email, password }) {
     const user = await this.model.findOne({ email });
     if (!user) throw new Error("Invalid credentials / Credenciales inválidas");
@@ -48,43 +38,6 @@ class UserDAO extends GlobalDAO {
     };
   }
 
-  /**
-  * Generate a password recovery token and send email.
-  */
-  async recover({ email }) {
-    const user = await this.model.findOne({ email });
-    if (!user) {
-      console.log("Recovery requested for non-existent email:", email);
-      return "If the email exists, a recovery link will be sent.";
-    }
-
-    const resetToken = jwt.sign(
-      {
-        id: user._id,
-        type: 'recovery',
-        email: user.email
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    
-    user.resetToken = resetToken;
-    user.resetTokenExp = Date.now() + 3600000; // 1 hour
-
-    try {
-      await user.save();
-      await sendRecoveryEmail(user.email, resetToken);
-      return "Password recovery email sent";
-    } catch (error) {
-      console.error("Error saving reset token:", error);
-      throw new Error("Error processing recovery request");
-    }
-  }
-
-  /**
-   * Update a user's profile.
-   */
   async update(id, updateData) {
     try {
       if (updateData.password) {
@@ -94,49 +47,11 @@ class UserDAO extends GlobalDAO {
         id,
         updateData,
         { new: true, runValidators: true }
-      ).select("-password -resetToken -resetTokenExp");
+      ).select("-password -resetPasswordToken -resetPasswordExpires");
       if (!updated) throw new Error("User not found / Usuario no encontrado");
       return updated;
     } catch (error) {
       throw new Error(`Error updating user / Error actualizando usuario: ${error.message}`);
-    }
-  }
-
-  /**
-  * Reset user password using a recovery token.
-  */
-  async resetPassword(token, newPassword) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.type !== 'recovery') {
-        throw new Error("Invalid token type");
-      }
-
-      const user = await this.model.findOne({
-        resetToken: token,
-        resetTokenExp: { $gt: Date.now() },
-        _id: decoded.id
-      });
-
-      if (!user) {
-        throw new Error("Invalid or expired password reset token");
-      }
-
-      const hash = await bcrypt.hash(newPassword, 10);
-      user.password = hash;
-      user.resetToken = undefined;
-      user.resetTokenExp = undefined;
-      await user.save();
-
-      return { message: "Password reset successfully" };
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        throw new Error("Token expired");
-      }
-      if (error.name === 'JsonWebTokenError') {
-        throw new Error("Invalid token");
-      }
-      throw new Error(error.message);
     }
   }
 
@@ -160,39 +75,6 @@ class UserDAO extends GlobalDAO {
     }
   }
 
-  async verifyAndResetPassword(email, token, hashedPassword) {
-    try {
-      const user = await this.model.findOne({
-        email,
-        resetPasswordToken: token,
-        resetPasswordExpires: { $gt: Date.now() }
-      });
-      if (!user) {
-        throw new Error('Token inválido o expirado');
-      }
-      user.password = hashedPassword;
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpires = undefined;
-      await user.save();
-      console.log(`Contraseña restablecida para usuario ${user._id}`);
-      return user;
-    } catch (error) {
-      throw new Error(`Error verificando y restableciendo contraseña: ${error.message}`);
-    }
-  }
-
-  async create(userData) {
-    try {
-      const existingUser  = await this.model.findOne({ email: userData.email });
-      if (existingUser ) {
-        throw new Error('Email ya existe');
-      }
-      return await super.create(userData);
-    } catch (error) {
-      throw new Error(`Error creando usuario: ${error.message}`);
-    }
-  }
-
   async saveResetToken(userId, token, expires) {
     try {
       const user = await this.model.findById(userId);
@@ -206,12 +88,36 @@ class UserDAO extends GlobalDAO {
     }
   }
 
+  async verifyAndResetPassword(email, token, hashedPassword) {
+    try {
+      const user = await this.model.findOne({
+        email,
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+      });
+      if (!user) throw new Error('Invalid or expired token / Token inválido o expirado');
+      user.password = hashedPassword;
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      console.log(`Password reset for user ${user._id}`);
+      return user;
+    } catch (error) {
+      throw new Error(`Error verifying and resetting password / Error verificando y reseteando contraseña: ${error.message}`);
+    }
+  }
+
+  async create(userData) {
+    try {
+      const existingUser = await this.model.findOne({ email: userData.email });
+      if (existingUser) {
+        throw new Error('Email already exists / Email ya existe');
+      }
+      return await super.create(userData);
+    } catch (error) {
+      throw new Error(`Error creating user / Error creando usuario: ${error.message}`);
+    }
+  }
 }
 
-/**
- * Export a singleton instance of UserDAO.
- *
- * This ensures the same DAO instance is reused across the app,
- * avoiding redundant instantiations.
- */
 module.exports = new UserDAO();
