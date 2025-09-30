@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const UserController = require("../controllers/UserController");
 const auth = require("../middlewares/auth");
+const userDAO = require('../dao/UserDAO'); 
 
 /**
  * Get user profile
@@ -13,14 +14,6 @@ router.get("/profile", auth, (req, res) => UserController.getProfile(req, res));
  */
 router.put("/profile", auth, (req, res) => UserController.updateProfile(req, res));
 
-router.delete("/profile", auth, async (req, res) => {
-  try {
-    const userId = req.userId;
-    await UserDAO.delete(userId);
-    res.status(200).json({ message: "Usuario eliminado correctamente" });
-  } catch (error) {
-    res.status(500).json({ message: error.message || "Error eliminando usuario" });
-  }
-});
+router.delete('/profile', auth, (req, res) => UserController.deleteProfile(req, res));
 
 module.exports = router;

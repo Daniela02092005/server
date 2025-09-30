@@ -152,6 +152,17 @@ class UserController extends GlobalController {
       res.status(400).json({ message: error.message || "Invalid or expired token" });
     }
   }
+
+  async deleteProfile(req, res) {
+    try {
+      if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
+      await UserDAO.deleteById(req.userId);
+      res.status(200).json({ message: "Usuario eliminado correctamente" });
+    } catch (error) {
+      console.error("Error in deleteProfile:", error);
+      res.status(400).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = new UserController();
