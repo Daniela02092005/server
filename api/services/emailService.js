@@ -5,6 +5,7 @@ const crypto = require('crypto');
 // Detectar qué puerto usar (primario o alternativo)
 const port = process.env.EMAIL_PORT || process.env.EMAIL_PORT_ALT || 465;
 
+console.log("EMAIL_HOST desde env:", process.env.EMAIL_HOST);
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: port,
